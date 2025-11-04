@@ -6,31 +6,75 @@
     <title>Meu VMS - Gerenciador de Câmeras</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; color: #333; }
-        .container { display: flex; flex-wrap: wrap; justify-content: center; padding: 20px; }
-        .main-content { flex: 2; min-width: 650px; text-align: center; margin: 10px; }
-        .sidebar { flex: 1; min-width: 300px; margin: 10px; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1 { color: #0056b3; }
-        h2 { color: #333; border-bottom: 2px solid #eee; padding-bottom: 5px; }
-        #video-container { border: 2px solid #ccc; display: inline-block; padding: 5px; background-color: #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        #video-stream { width: 640px; height: 480px; background-color: #000; display: block; }
+        .container { display: flex; flex-wrap: wrap; padding: 20px; }
         
-        .controls { margin-top: 15px; }
-        .btn { padding: 10px 20px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; color: white; margin: 5px; }
+        /* NOVO: Coluna de Câmeras (conteúdo principal) */
+        .camera-column {
+            flex: 3; /* Ocupa 3/4 */
+            display: flex;
+            flex-wrap: wrap; /* Câmeras quebram a linha */
+            justify-content: center;
+            align-content: flex-start;
+        }
         
-        /* Controles Manuais */
-        #btn-start { background-color: #28a745; }
-        #btn-stop { background-color: #dc3545; }
-        
-        /* NOVO: Controle de Detecção */
-        #btn-motion { background-color: #17a2b8; } /* Azul Ciano */
-        #btn-motion.active { background-color: #ffc107; color: #333; } /* Amarelo */
+        /* NOVO: Barra Lateral (player) */
+        .sidebar {
+            flex: 1; /* Ocupa 1/4 */
+            min-width: 300px;
+            margin: 10px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            /* Faz a sidebar ter a altura da tela */
+            height: 90vh; 
+            position: sticky; /* Fica "presa" no lugar */
+            top: 20px;
+        }
 
-        #status-message { margin-top: 10px; font-size: 18px; color: #555; font-weight: bold; }
+        h1 { width: 100%; text-align: center; color: #0056b3; }
+        h2 { color: #333; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+
+        /* NOVO: Estilo do "Bloco" de cada câmera */
+        .camera-pod {
+            border: 1px solid #ccc;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+        .camera-pod h3 {
+            margin-top: 0;
+            color: #0056b3;
+            text-transform: capitalize; /* Deixa "webcam" como "Webcam" */
+        }
+        .camera-pod img {
+            width: 640px;
+            height: 480px;
+            background-color: #000;
+            display: block;
+        }
+        .camera-pod .status-message {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #555;
+            font-weight: bold;
+        }
+        .camera-pod .controls { margin-top: 10px; }
+
+        /* Estilos dos Botões (iguais) */
+        .btn { padding: 8px 15px; font-size: 14px; cursor: pointer; border: none; border-radius: 5px; color: white; margin: 5px; }
+        .btn-start { background-color: #28a745; }
+        .btn-stop { background-color: #dc3545; }
+        .btn-motion { background-color: #17a2b8; }
+        .btn-motion.active { background-color: #ffc107; color: #333; }
+        .btn-refresh { background-color: #007bff; }
         
         /* Player (igual) */
         #video-player-container { margin-top: 20px; background-color: #000; }
-        #video-player { width: 100%; max-width: 640px; border: 1px solid #ddd; }
-        #btn-refresh { background-color: #007bff; }
+        #video-player { width: 100%; border: 1px solid #ddd; }
         #video-list { list-style-type: none; padding: 0; max-height: 400px; overflow-y: auto; }
         #video-list li { padding: 10px; border-bottom: 1px solid #eee; }
         #video-list a { text-decoration: none; color: #0056b3; cursor: pointer; font-weight: bold; }
@@ -39,29 +83,14 @@
 </head>
 <body>
     <div class="container">
-        <div class="main-content">
-            <h1>Gerenciador de Câmeras (VMS)</h1>
-            <div id="video-container">
-                <img id="video-stream" src="{{ url_for('video_feed') }}" alt="Stream de Vídeo">
-            </div>
-            
-            <div id="status-message">Status: Carregando...</div>
+        <h1>Gerenciador de Múltiplas Câmeras (VMS)</h1>
 
-            <h2>Controle Manual</h2>
-            <div class="controls">
-                <button id="btn-start" class="btn">Iniciar Gravação Manual</button>
-                <button id="btn-stop" class="btn">Parar Gravação Manual</button>
+        <div class="camera-column" id="camera-column">
             </div>
-
-            <h2>Controle Automático</h2>
-            <div class="controls">
-                <button id="btn-motion" class="btn">Ligar Detecção de Movimento</button>
-            </div>
-        </div>
 
         <div class="sidebar">
             <h2>Gravações Salvas</h2>
-            <button id="btn-refresh" class="btn">Atualizar Lista</button>
+            <button id="btn-refresh" class="btn btn-refresh">Atualizar Lista</button>
             <div id="video-player-container">
                 <video id="video-player" controls>
                     <source src="" type="video/webm">
@@ -72,78 +101,157 @@
         </div>
     </div>
 
-    <script>
-        // Elementos de Status e Botões
-        const statusMessage = document.getElementById('status-message');
-        
-        // Controles Manuais
-        const btnStart = document.getElementById('btn-start');
-        const btnStop = document.getElementById('btn-stop');
-        
-        // NOVO: Controles de Detecção
-        const btnMotion = document.getElementById('btn-motion');
+    <template id="camera-pod-template">
+        <div class="camera-pod">
+            <h3 class="cam-title"></h3>
+            <img class="video-stream" src="" alt="Stream de Vídeo" width="640" height="480">
+            <div class="status-message">Status: Carregando...</div>
+            <div class="controls">
+                <button class="btn btn-start">Gravar Manual</button>
+                <button class="btn btn-stop">Parar Manual</button>
+                <button class="btn btn-motion">Ligar Detecção</button>
+            </div>
+        </div>
+    </template>
 
-        // Player (igual)
-        const btnRefresh = document.getElementById('btn-refresh');
+    <script>
+        // --- Ponto de Entrada: Carregar tudo ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCameras(); // NOVO: Carrega as câmeras primeiro
+            loadVideoList(); // Carrega a lista de gravações (igual)
+            
+            // NOVO: Adiciona 'escutadores' de eventos em um nível superior
+            // (Event Delegation)
+            document.getElementById('camera-column').addEventListener('click', handleCameraControls);
+            
+            // Botão de refresh da lista de playback (igual)
+            document.getElementById('btn-refresh').addEventListener('click', loadVideoList);
+        });
+
+        /**
+         * NOVO: Carrega a lista de câmeras do servidor e constrói a UI
+         */
+        async function loadCameras() {
+            try {
+                const response = await fetch('/get_cameras');
+                const data = await response.json();
+                const cameraColumn = document.getElementById('camera-column');
+                const template = document.getElementById('camera-pod-template');
+                
+                for (const camId of data.cameras) {
+                    // Clona o molde (template)
+                    const podClone = template.content.cloneNode(true);
+                    const podElement = podClone.querySelector('.camera-pod');
+                    
+                    // Define o ID da câmera no elemento
+                    podElement.dataset.camId = camId;
+                    
+                    // Configura os elementos internos
+                    podElement.querySelector('.cam-title').textContent = camId;
+                    podElement.querySelector('.video-stream').src = '/video_feed/' + camId;
+                    
+                    // Adiciona o pod clonado na página
+                    cameraColumn.appendChild(podElement);
+                    
+                    // Carrega o status individual desta câmera
+                    loadInitialStatus(camId);
+                }
+            } catch (error) {
+                console.error("Erro ao carregar câmeras:", error);
+                document.getElementById('camera-column').innerHTML = "<h2>Erro ao carregar câmeras. Servidor está online?</h2>";
+            }
+        }
+        
+        /**
+         * NOVO: Escutador de eventos centralizado para todos os botões das câmeras
+         */
+        function handleCameraControls(event) {
+            const button = event.target;
+            // Acha o "pod" da câmera pai deste botão
+            const pod = button.closest('.camera-pod');
+            if (!pod) return; // Sai se o clique não foi em um botão
+            
+            const camId = pod.dataset.camId;
+            
+            // Decide qual ação tomar baseado na classe do botão
+            if (button.classList.contains('btn-start')) {
+                sendCameraCommand(camId, 'start_recording');
+            } else if (button.classList.contains('btn-stop')) {
+                sendCameraCommand(camId, 'stop_recording');
+            } else if (button.classList.contains('btn-motion')) {
+                toggleMotionDetection(camId);
+            }
+        }
+
+        /**
+         * NOVO: Envia comandos de gravação (start/stop) para uma câmera específica
+         */
+        async function sendCameraCommand(camId, command) {
+            const pod = document.querySelector(`.camera-pod[data-cam-id="${camId}"]`);
+            const statusElement = pod.querySelector('.status-message');
+            try {
+                const response = await fetch(`/${command}/${camId}`, { method: 'POST' });
+                const data = await response.json();
+                statusElement.textContent = 'Status: ' + data.status;
+            } catch (error) {
+                console.error(`Erro no comando '${command}' para ${camId}:`, error);
+                statusElement.textContent = 'Status: Erro de comunicação';
+            }
+        }
+
+        /**
+         * NOVO: Liga/desliga a detecção de movimento para uma câmera específica
+         */
+        async function toggleMotionDetection(camId) {
+            const pod = document.querySelector(`.camera-pod[data-cam-id="${camId}"]`);
+            const statusElement = pod.querySelector('.status-message');
+            try {
+                const response = await fetch(`/toggle_motion_detection/${camId}`, { method: 'POST' });
+                const data = await response.json();
+                statusElement.textContent = 'Status: ' + data.status;
+                updateMotionButton(camId, data.enabled);
+            } catch (error) {
+                console.error(`Erro ao alternar detecção para ${camId}:`, error);
+                statusElement.textContent = 'Status: Erro de comunicação';
+            }
+        }
+        
+        /**
+         * NOVO: Carrega o status inicial de UMA câmera
+         */
+        async function loadInitialStatus(camId) {
+            const pod = document.querySelector(`.camera-pod[data-cam-id="${camId}"]`);
+            const statusElement = pod.querySelector('.status-message');
+            try {
+                const response = await fetch(`/get_status/${camId}`);
+                const data = await response.json();
+                statusElement.textContent = 'Status: ' + data.status;
+                updateMotionButton(camId, data.motion_enabled);
+            } catch (error) {
+                statusElement.textContent = 'Status: Offline';
+            }
+        }
+        
+        /**
+         * NOVO: Atualiza a aparência do botão de detecção de UMA câmera
+         */
+        function updateMotionButton(camId, isEnabled) {
+            const pod = document.querySelector(`.camera-pod[data-cam-id="${camId}"]`);
+            const motionButton = pod.querySelector('.btn-motion');
+            if (isEnabled) {
+                motionButton.textContent = 'Desligar Detecção';
+                motionButton.classList.add('active');
+            } else {
+                motionButton.textContent = 'Ligar Detecção';
+                motionButton.classList.remove('active');
+            }
+        }
+
+        // --- Lógica do Player de Playback (Quase idêntica) ---
+        
         const videoList = document.getElementById('video-list');
         const videoPlayer = document.getElementById('video-player');
-
-        // --- Funções de Comunicação ---
-
-        // Função genérica para enviar comandos manuais
-        async function sendManualCommand(command) {
-            try {
-                const response = await fetch('/' + command, { method: 'POST' });
-                const data = await response.json();
-                statusMessage.textContent = 'Status: ' + data.status;
-            } catch (error) {
-                console.error('Erro ao enviar comando:', error);
-                statusMessage.textContent = 'Status: Erro de comunicação';
-            }
-        }
-
-        // NOVO: Função para Ligar/Desligar a Detecção
-        async function toggleMotionDetection() {
-            try {
-                const response = await fetch('/toggle_motion_detection', { method: 'POST' });
-                const data = await response.json();
-                statusMessage.textContent = 'Status: ' + data.status;
-                updateMotionButton(data.enabled);
-            } catch (error) {
-                console.error('Erro ao alternar detecção:', error);
-                statusMessage.textContent = 'Status: Erro de comunicação';
-            }
-        }
         
-        // NOVO: Função para atualizar a aparência do botão de detecção
-        function updateMotionButton(isEnabled) {
-            if (isEnabled) {
-                btnMotion.textContent = 'Desligar Detecção de Movimento';
-                btnMotion.classList.add('active'); // Adiciona a cor amarela
-            } else {
-                btnMotion.textContent = 'Ligar Detecção de Movimento';
-                btnMotion.classList.remove('active'); // Remove a cor amarela
-            }
-        }
-        
-        // NOVO: Função para checar o status ao carregar a página
-        async function loadInitialStatus() {
-            try {
-                const response = await fetch('/get_status');
-                const data = await response.json();
-                statusMessage.textContent = 'Status: ' + data.status;
-                updateMotionButton(data.motion_enabled);
-            } catch (error) {
-                statusMessage.textContent = 'Status: Offline';
-            }
-        }
-
-        // --- Event Listeners (Botões) ---
-        btnStart.addEventListener('click', () => sendManualCommand('start_recording'));
-        btnStop.addEventListener('click', () => sendManualCommand('stop_recording'));
-        btnMotion.addEventListener('click', toggleMotionDetection);
-
-        // --- Lógica do Player (igual) ---
         async function loadVideoList() {
             try {
                 const response = await fetch('/list_videos');
@@ -169,6 +277,7 @@
                 videoList.innerHTML = '<li>Erro ao carregar vídeos.</li>';
             }
         }
+        
         function playVideo(filename) {
             const videoSource = videoPlayer.querySelector('source');
             const videoUrl = '/playback/' + filename;
@@ -176,13 +285,6 @@
             videoPlayer.load();
             videoPlayer.play();
         }
-        btnRefresh.addEventListener('click', loadVideoList);
-        
-        // --- Carregamento Inicial ---
-        document.addEventListener('DOMContentLoaded', () => {
-            loadInitialStatus(); // NOVO: Carrega o status da detecção
-            loadVideoList();     // Carrega a lista de vídeos
-        });
 
     </script>
 </body>

@@ -5,321 +5,353 @@ PROJETO VMS (Video Management Software) - TRABALHO DE FACULDADE
 
 Este é o arquivo principal do servidor (Backend) do projeto.
 
-Funcionalidades implementadas (Opção 1 + Opção 2):
-1.  Streaming de vídeo ao vivo.
-2.  Gravação manual (Iniciar/Parar) em .webm.
-3.  Player para listar e assistir às gravações.
-4.  Uso de Threading (Locks) para evitar conflitos.
-5.  NOVO: Detecção de movimento com gravação automática e
-    feedback visual (retângulo verde).
+Funcionalidades implementadas (Opção 1 + 2 + 3):
+1.  Streaming de vídeo.
+2.  Gravação manual e por detecção em .webm.
+3.  Player para gravações.
+4.  NOVO: Suporte a múltiplas câmeras, cada uma com seu próprio
+    estado (gravação, detecção) rodando em uma thread separada.
 """
 
 # --- 1. IMPORTAÇÕES DE BIBLIOTECAS ---
-# ------------------------------------------------------------------------------
 import cv2
 from flask import Flask, Response, render_template, jsonify, send_from_directory
 import time
 import os
 import threading
 
-# --- 2. CONFIGURAÇÕES E VARIÁVEIS GLOBAIS ---
-# ------------------------------------------------------------------------------
+# --- 2. CONFIGURAÇÕES PRINCIPAIS ---
 
-# --- Constantes de Configuração ---
-FONTE_DE_VIDEO = 0 
+# --- NOVO: DEFINA SUAS CÂMERAS AQUI ---
+# Crie um dicionário com um 'id' (nome) único para cada câmera.
+# O 'id' será usado na URL (ex: /video_feed/webcam).
+# A 'fonte' pode ser um número (para webcams) ou um endereço RTSP.
+CAMERA_SOURCES = {
+    "webcam": 0,
+    # Exemplo de câmera IP (descomente e mude se tiver uma):
+    # "corredor": "rtsp://admin:senha123@192.168.1.100:554/stream1"
+}
+
 PASTA_GRAVACOES = "gravacoes"
+MOTION_COOLDOWN = 5.0
+MIN_CONTOUR_AREA = 500
 
-# --- NOVO: Constantes de Detecção de Movimento ---
-MOTION_COOLDOWN = 5.0  
-# Tempo em segundos (5.0) sem movimento para parar a gravação automática.
+# --- NOVO: Dicionário Global para armazenar os 'workers' das câmeras
+g_cameras = {}
 
-MIN_CONTOUR_AREA = 500 
-# A área mínima (em pixels) para que um contorno seja
-# considerado "movimento" real (ignora ruídos pequenos).
-
-# --- Inicialização dos Objetos Principais ---
-app = Flask(__name__)
-cap = cv2.VideoCapture(FONTE_DE_VIDEO)
-lock = threading.Lock()
-
-# --- Variáveis Globais de Estado ---
-is_recording = False
-video_writer = None
-
-# --- NOVO: Variáveis de Estado para Detecção ---
-motion_detection_enabled = False 
-# O "interruptor" mestre (controlado pelo botão no HTML). Começa desligado.
-
-static_background = None 
-# Armazena o "frame de fundo" (sem movimento) para comparação.
-
-last_motion_time = 0
-# Registra a hora (timestamp) do último movimento detectado.
-
-
-# --- 3. LÓGICA DE GRAVAÇÃO (REATORADA) ---
+# --- 3. A CLASSE 'CameraWorker' ---
 # ------------------------------------------------------------------------------
-# Separamos a lógica de "iniciar" e "parar" em funções próprias.
-# Isso nos permite chamá-las tanto pelas rotas do Flask (manual)
-# quanto pela detecção de movimento (automático).
-#
-# IMPORTANTE: Estas funções SÓ DEVEM SER CHAMADAS de dentro
-# de um bloco 'with lock:' para garantir a segurança das threads.
+# Esta classe é o novo "cérebro". Cada câmera terá sua própria
+# instância desta classe, rodando em sua própria thread.
 # ------------------------------------------------------------------------------
 
-def start_recording_logic():
-    """
-    Função interna que INICIA a gravação.
-    (Assume que já está dentro de um 'with lock:')
-    """
-    global is_recording, video_writer
+class CameraWorker(threading.Thread):
+    def __init__(self, cam_id, source):
+        """ Inicializador da classe. Roda quando criamos um novo 'CameraWorker'. """
+        super().__init__()
+        self.cam_id = cam_id      # ID (ex: "webcam")
+        self.source = source      # Fonte (ex: 0 ou "rtsp://...")
+        self.daemon = True        # Faz a thread parar quando o programa principal parar
+        
+        print(f"Iniciando Câmera Worker para: {self.cam_id}")
+        self.cap = cv2.VideoCapture(source)
+        if not self.cap.isOpened():
+            print(f"ERRO: Não foi possível abrir a câmera {self.cam_id}")
+
+        # --- Locks (Cadeados) ---
+        # Lock para o frame de saída (para o stream)
+        self.frame_lock = threading.Lock()
+        # Lock para TODAS as outras variáveis de estado (gravação, detecção)
+        self.state_lock = threading.Lock()
+
+        # --- Estado da Câmera (agora é interno da classe) ---
+        self.output_frame = None           # O último frame processado (com retângulos)
+        self.is_recording = False
+        self.video_writer = None
+        self.motion_detection_enabled = False
+        self.static_background = None
+        self.last_motion_time = 0
+
+    def get_latest_frame(self):
+        """ Pega o último frame processado de forma segura. """
+        with self.frame_lock:
+            if self.output_frame is None:
+                return None
+            return self.output_frame.copy() # Retorna uma CÓPIA
+
+    # --- Lógica de Gravação (agora são 'métodos' da classe) ---
+    # (Estas funções DEVEM ser chamadas de dentro de um 'with self.state_lock:')
     
-    if is_recording:
-        print("LOG: (Lógica) Já estava gravando, não iniciar novamente.")
-        return # Já está gravando, não faz nada
+    def start_recording_logic(self):
+        """ Função interna que INICIA a gravação. """
+        if self.is_recording:
+            return
 
-    print("LOG: (Lógica) Iniciando gravação...")
-    is_recording = True
+        print(f"LOG ({self.cam_id}): Iniciando gravação...")
+        self.is_recording = True
+        
+        # Pega dimensões do frame (usa get_latest_frame para segurança)
+        frame = self.get_latest_frame()
+        if frame is None: # Se a câmera ainda não enviou um frame
+             # Tenta pegar direto da captura (pode bloquear, mas é raro)
+             ret, frame = self.cap.read()
+             if not ret:
+                 print(f"ERRO ({self.cam_id}): Não conseguiu ler frame para iniciar gravação.")
+                 self.is_recording = False
+                 return
+        
+        altura, largura, _ = frame.shape
+        fps = 20.0
+        fourcc = cv2.VideoWriter_fourcc(*'VP80')
+        
+        timestr = time.strftime("%Y%m%d-%H%M%S")
+        # NOVO: Nome do arquivo agora inclui o ID da câmera
+        nome_arquivo = f"{PASTA_GRAVACOES}/{self.cam_id}-gravacao-{timestr}.webm"
+        
+        self.video_writer = cv2.VideoWriter(nome_arquivo, fourcc, fps, (largura, altura))
+        print(f"Salvando vídeo ({self.cam_id}) em: {nome_arquivo}")
 
-    # Pega as dimensões do vídeo
-    largura = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    altura = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fps = 20.0
+    def stop_recording_logic(self):
+        """ Função interna que PARA a gravação. """
+        if not self.is_recording:
+            return
 
-    # Define o CODEC para .webm
-    fourcc = cv2.VideoWriter_fourcc(*'VP80')
+        print(f"LOG ({self.cam_id}): Parando gravação...")
+        self.is_recording = False
+        if self.video_writer is not None:
+            self.video_writer.release()
+            self.video_writer = None
+            print(f"Arquivo de vídeo ({self.cam_id}) salvo e fechado.")
+            
+    # --- O Loop Principal da Thread ---
     
-    # Cria nome de arquivo único
-    timestr = time.strftime("%Y%m%d-%H%M%S")
-    nome_arquivo = f"{PASTA_GRAVACOES}/gravacao-{timestr}.webm"
-    
-    # Cria o objeto 'VideoWriter'
-    video_writer = cv2.VideoWriter(nome_arquivo, fourcc, fps, (largura, altura))
-    print(f"Salvando vídeo em: {nome_arquivo}")
+    def run(self):
+        """
+        Esta função é o loop principal da thread.
+        Ela roda para sempre, lendo, processando e gravando frames.
+        """
+        while True:
+            if not self.cap.isOpened():
+                print(f"({self.cam_id}): Câmera não está aberta. Tentando reconectar em 5s...")
+                time.sleep(5)
+                self.cap = cv2.VideoCapture(self.source)
+                continue
 
-def stop_recording_logic():
-    """
-    Função interna que PARA a gravação.
-    (Assume que já está dentro de um 'with lock:')
-    """
-    global is_recording, video_writer
-    
-    if not is_recording:
-        print("LOG: (Lógica) Não estava gravando, não parar novamente.")
-        return # Não estava gravando, não faz nada
+            ret, frame_original = self.cap.read()
+            if not ret:
+                print(f"({self.cam_id}): Falha ao ler frame. Fim do stream?")
+                time.sleep(1) # Espera um segundo antes de tentar de novo
+                continue
+            
+            # Copia o frame para processamento. 'frame_processado'
+            # receberá os retângulos de detecção.
+            frame_processado = frame_original.copy()
+            
+            motion_detected_this_frame = False
 
-    print("LOG: (Lógica) Parando gravação...")
-    is_recording = False
-    
-    if video_writer is not None:
-        video_writer.release() # Finaliza e salva o arquivo
-        video_writer = None
-        print("Arquivo de vídeo .webm salvo e fechado.")
+            # Pega o estado atual da detecção (protegido pelo lock)
+            with self.state_lock:
+                motion_is_on = self.motion_detection_enabled
 
+            # --- Lógica de Detecção de Movimento (igual a antes, mas usa 'self.') ---
+            if motion_is_on:
+                gray_frame = cv2.cvtColor(frame_original, cv2.COLOR_BGR2GRAY)
+                gray_frame = cv2.GaussianBlur(gray_frame, (21, 21), 0)
 
-# --- 4. FUNÇÃO PRINCIPAL DE STREAMING (COM DETECÇÃO) ---
+                with self.state_lock: # Protege 'self.static_background'
+                    if self.static_background is None:
+                        self.static_background = gray_frame
+                        print(f"DETECÇÃO ({self.cam_id}): Fundo estático definido.")
+                        continue
+                    
+                    # Copia o fundo para não ficar travado no 'lock'
+                    bg = self.static_background.copy()
+
+                diff_frame = cv2.absdiff(bg, gray_frame)
+                thresh_frame = cv2.threshold(diff_frame, 30, 255, cv2.THRESH_BINARY)[1]
+                contours, _ = cv2.findContours(thresh_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+                for contour in contours:
+                    if cv2.contourArea(contour) < MIN_CONTOUR_AREA:
+                        continue
+                    
+                    motion_detected_this_frame = True
+                    (x, y, w, h) = cv2.boundingRect(contour)
+                    # Desenha o retângulo no 'frame_processado'
+                    cv2.rectangle(frame_processado, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                
+                # --- Lógica de Cooldown/Gravação (protegida pelo lock) ---
+                with self.state_lock:
+                    if motion_detected_this_frame:
+                        self.last_motion_time = time.time()
+                        if not self.is_recording:
+                            print(f"DETECÇÃO ({self.cam_id}): Movimento detectado!")
+                            self.start_recording_logic()
+                    else:
+                        if self.is_recording and (time.time() - self.last_motion_time > MOTION_COOLDOWN):
+                            print(f"DETECÇÃO ({self.cam_id}): Sem movimento por {MOTION_COOLDOWN}s.")
+                            self.stop_recording_logic()
+
+            # --- Lógica de Gravação (Manual ou por Detecção) ---
+            with self.state_lock:
+                if self.is_recording and self.video_writer is not None:
+                    try:
+                        # Salva o frame ORIGINAL (sem retângulos)
+                        self.video_writer.write(frame_original) 
+                    except cv2.error:
+                        pass # Ignora erros se o writer foi fechado
+            
+            # --- Armazena o Frame Processado (para o Stream) ---
+            with self.frame_lock:
+                # Salva o frame COM retângulos para ser visto no stream
+                self.output_frame = frame_processado
+
+    def release(self):
+        """ Função para limpar tudo quando o servidor fechar. """
+        self.cap.release()
+        with self.state_lock:
+            if self.is_recording:
+                self.stop_recording_logic()
+
+# --- 4. FUNÇÃO GERADORA (PARA O STREAM FLASK) ---
 # ------------------------------------------------------------------------------
 
-def gerar_frames():
+def gerar_frames(cam_id):
     """
-    Esta é a função "geradora" principal.
-    - Captura frames
-    - (NOVO) Realiza a detecção de movimento
-    - (NOVO) Desenha retângulos no frame
-    - Controla a gravação automática
-    - Envia o frame (como JPEG) para o navegador
+    Esta função agora é um gerador simples. Ela não faz processamento.
+    Ela apenas pega o frame mais recente do 'CameraWorker' correto.
     """
     
-    # Declaramos as variáveis globais que vamos MODIFICAR
-    global static_background, is_recording, last_motion_time, motion_detection_enabled
-    
-    print("Iniciando stream de vídeo...")
+    # Verifica se a câmera pedida existe
+    if cam_id not in g_cameras:
+        print(f"ERRO: Tentativa de acessar stream de câmera inexistente: {cam_id}")
+        return
+
+    worker = g_cameras[cam_id]
     
     while True:
-        sucesso, frame = cap.read()
-        if not sucesso:
-            print("Erro ao ler frame.")
-            break
+        frame = worker.get_latest_frame()
         
-        # Esta flag controla se achamos movimento NESTA iteração específica
-        motion_detected_this_frame = False
-        
-        # --- INÍCIO DA LÓGICA DE DETECÇÃO DE MOVIMENTO ---
-        
-        # Só executa a lógica se o "interruptor" (botão) estiver ligado
-        if motion_detection_enabled:
+        if frame is None:
+            # Espera a câmera inicializar
+            time.sleep(0.1)
+            continue
             
-            # 1. Preparar o frame para análise
-            # Converte para escala de cinza (mais simples de processar)
-            gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            # Aplica um "borrão" (blur) para remover ruído (ex: grãos da imagem)
-            gray_frame = cv2.GaussianBlur(gray_frame, (21, 21), 0)
-
-            # 2. Definir o frame de fundo (o "cenário vazio")
-            # Se ainda não temos um fundo, usamos este primeiro frame
-            if static_background is None:
-                static_background = gray_frame
-                print("DETECÇÃO: Fundo estático definido.")
-                continue # Pula o resto do loop e pega o próximo frame
-
-            # 3. Calcular a Diferença Absoluta
-            # Compara o 'fundo' com o 'frame atual em cinza'
-            diff_frame = cv2.absdiff(static_background, gray_frame)
-
-            # 4. Limiar (Threshold)
-            # Converte a imagem de diferença em uma imagem binária (preto/branco)
-            # Pixels com diferença MAIOR que 30 viram brancos (255), o resto vira preto (0)
-            thresh_frame = cv2.threshold(diff_frame, 30, 255, cv2.THRESH_BINARY)[1]
-            
-            # 5. Encontrar Contornos (as "manchas brancas")
-            # Procura por todas as áreas brancas contínuas na imagem de limiar
-            contours, _ = cv2.findContours(thresh_frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-            for contour in contours:
-                # Se o contorno (área branca) for muito pequeno, é só ruído. Ignorar.
-                if cv2.contourArea(contour) < MIN_CONTOUR_AREA:
-                    continue
-                
-                # Se achamos um contorno grande o suficiente, HÁ MOVIMENTO!
-                motion_detected_this_frame = True
-                
-                # BÔNUS: Desenhar um retângulo no frame ORIGINAL (colorido)
-                (x, y, w, h) = cv2.boundingRect(contour) # Pega as coordenadas do contorno
-                # Desenha um retângulo verde (0, 255, 0) com 2 pixels de espessura
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2) 
-
-            # 6. Lógica de Cooldown e Gravação (Protegida pelo lock)
-            with lock:
-                if motion_detected_this_frame:
-                    # Se há movimento, atualiza a "última vez que vimos movimento"
-                    last_motion_time = time.time()
-                    
-                    # Se não estávamos gravando, iniciamos a gravação
-                    if not is_recording:
-                        print(f"DETECÇÃO: Movimento detectado! ({time.strftime('%H:%M:%S')})")
-                        start_recording_logic() # Chama a lógica interna
-                else:
-                    # Se NÃO há movimento neste frame...
-                    if is_recording:
-                        # ...e já se passaram 5s (COOLDOWN) desde o último movimento
-                        if (time.time() - last_motion_time > MOTION_COOLDOWN):
-                            print(f"DETECÇÃO: Sem movimento por {MOTION_COOLDOWN}s. Parando gravação.")
-                            stop_recording_logic() # Chama a lógica interna
-        
-        # --- FIM DA LÓGICA DE DETECÇÃO DE MOVIMENTO ---
-            
-        # 7. Lógica de Gravação Manual (protegida pelo lock)
-        # Esta parte é para a gravação manual, que escreve o frame
-        # independentemente da detecção de movimento.
-        with lock:
-             if is_recording and video_writer is not None:
-                try:
-                    video_writer.write(frame)
-                except cv2.error as e:
-                    print(f"Erro ao escrever frame (provavelmente foi fechado): {e}")
-
-        # 8. Preparar o frame para o Navegador
-        # Codifica o frame (agora COM os retângulos verdes, se houver) para JPEG
+        # Codifica o frame (que já tem os retângulos, se houver) para JPEG
         (flag, buffer_codificado) = cv2.imencode(".jpg", frame)
         if not flag:
             continue
-        frame_em_bytes = buffer_codificado.tobytes()
 
-        # 9. Enviar o frame para o Navegador
+        frame_em_bytes = buffer_codificado.tobytes()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_em_bytes + b'\r\n')
 
 
-# --- 5. ROTAS DA API (OS "ENDEREÇOS" DO NOSSO SERVIDOR) ---
+# --- 5. ROTAS DA API (AGORA PARAMETRIZADAS) ---
 # ------------------------------------------------------------------------------
+
+app = Flask(__name__) # O Flask app (precisa estar antes das rotas)
 
 @app.route('/')
 def index():
     return render_template('index.html') 
 
-@app.route('/video_feed')
-def video_feed():
-    return Response(gerar_frames(), 
+# NOVO: Rota para o frontend saber quais câmeras existem
+@app.route('/get_cameras')
+def get_cameras():
+    # Retorna a lista de IDs (ex: ["webcam", "corredor"])
+    return jsonify(cameras=list(CAMERA_SOURCES.keys()))
+
+# NOVO: Rota de stream agora aceita um 'cam_id'
+@app.route('/video_feed/<cam_id>')
+def video_feed(cam_id):
+    return Response(gerar_frames(cam_id), 
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
-# --- Rotas de Controle Manual (Agora usam a lógica refatorada) ---
+# --- Rotas de Controle (agora com <cam_id>) ---
 
-@app.route('/start_recording', methods=['POST'])
-def start_recording():
-    """ Rota para o botão 'Iniciar Gravação Manual'. """
-    with lock:
-        start_recording_logic() # Chama a função interna
-    return jsonify(status="Gravando (Manual)...")
-
-@app.route('/stop_recording', methods=['POST'])
-def stop_recording():
-    """ Rota para o botão 'Parar Gravação Manual'. """
-    with lock:
-        stop_recording_logic() # Chama a função interna
-    return jsonify(status="Ocioso (Manual)")
-
-# --- NOVO: Rotas de Controle de Detecção ---
-
-@app.route('/toggle_motion_detection', methods=['POST'])
-def toggle_motion_detection():
-    """
-    Rota para o botão 'Ligar/Desligar Detecção'.
-    Ativa ou desativa o "interruptor" mestre.
-    """
-    global motion_detection_enabled, static_background
-    
-    with lock:
-        # Inverte o valor da variável (True vira False, False vira True)
-        motion_detection_enabled = not motion_detection_enabled
+@app.route('/start_recording/<cam_id>', methods=['POST'])
+def start_recording(cam_id):
+    if cam_id not in g_cameras:
+        return jsonify(status="Erro: Câmera não encontrada"), 404
         
-        if motion_detection_enabled:
-            # Se LIGOU, reseta o fundo. O próximo frame será o novo fundo.
-            static_background = None 
-            print("DETECÇÃO: Ativada. Aguardando fundo estático...")
-            status = "Detecção Ativada"
-        else:
-            # Se DESLIGOU, paramos qualquer gravação que estava em curso
-            print("DETECÇÃO: Desativada.")
-            status = "Detecção Desativada"
-            if is_recording:
-                stop_recording_logic() # Para a gravação
-                
-    return jsonify(status=status, enabled=motion_detection_enabled)
+    worker = g_cameras[cam_id]
+    with worker.state_lock: # Usa o lock daquele worker específico
+        worker.start_recording_logic()
+    return jsonify(status=f"Gravando ({cam_id})...")
 
-@app.route('/get_status')
-def get_status():
-    """
-    Rota para o JavaScript saber o estado do servidor quando a página carrega.
-    """
-    with lock:
+@app.route('/stop_recording/<cam_id>', methods=['POST'])
+def stop_recording(cam_id):
+    if cam_id not in g_cameras:
+        return jsonify(status="Erro: Câmera não encontrada"), 404
+        
+    worker = g_cameras[cam_id]
+    with worker.state_lock:
+        worker.stop_recording_logic()
+    return jsonify(status=f"Ocioso ({cam_id})")
+
+@app.route('/toggle_motion_detection/<cam_id>', methods=['POST'])
+def toggle_motion_detection(cam_id):
+    if cam_id not in g_cameras:
+        return jsonify(status="Erro: Câmera não encontrada"), 404
+    
+    worker = g_cameras[cam_id]
+    status_msg = ""
+    is_enabled = False
+    
+    with worker.state_lock:
+        worker.motion_detection_enabled = not worker.motion_detection_enabled
+        is_enabled = worker.motion_detection_enabled
+        
+        if is_enabled:
+            worker.static_background = None # Reseta o fundo
+            status_msg = f"Detecção Ativada ({cam_id})"
+        else:
+            status_msg = f"Detecção Desativada ({cam_id})"
+            # Se desligar, paramos qualquer gravação automática
+            if worker.is_recording:
+                worker.stop_recording_logic()
+                
+    return jsonify(status=status_msg, enabled=is_enabled)
+
+@app.route('/get_status/<cam_id>')
+def get_status(cam_id):
+    if cam_id not in g_cameras:
+        return jsonify(status="Erro: Câmera não encontrada"), 404
+        
+    worker = g_cameras[cam_id]
+    
+    with worker.state_lock: # Acessa o estado de forma segura
         status_text = "Ocioso"
-        if is_recording:
+        if worker.is_recording:
             status_text = "Gravando..."
-        elif motion_detection_enabled:
+        elif worker.motion_detection_enabled:
             status_text = "Detecção Ativada"
             
         return jsonify(
-            motion_enabled=motion_detection_enabled, # O botão sabe se está "ligado"
-            status=status_text # A mensagem de status
+            cam_id=cam_id,
+            motion_enabled=worker.motion_detection_enabled,
+            is_recording=worker.is_recording, # NOVO: Informa se está gravando
+            status=status_text
         )
 
-# --- Rotas do Player de Gravações (Não mudam) ---
+# --- Rotas do Player (Globais - Não mudam) ---
 
 @app.route('/list_videos')
 def list_videos():
     videos = []
-    with lock:
-        if os.path.exists(PASTA_GRAVACOES):
-            videos = sorted(
-                [f for f in os.listdir(PASTA_GRAVACOES) if f.endswith(".webm")],
-                reverse=True
-            )
+    # O lock global aqui não é mais necessário,
+    # pois a pasta é lida de forma segura pelo 'os'.
+    if os.path.exists(PASTA_GRAVACOES):
+        videos = sorted(
+            [f for f in os.listdir(PASTA_GRAVACOES) if f.endswith(".webm")],
+            reverse=True
+        )
     return jsonify(videos=videos)
 
 @app.route('/playback/<filename>')
 def playback(filename):
-    with lock:
-        return send_from_directory(PASTA_GRAVACOES, filename)
+    return send_from_directory(PASTA_GRAVACOES, filename)
 
 
 # --- 6. PONTO DE ENTRADA (EXECUÇÃO DO SERVIDOR) ---
@@ -329,15 +361,18 @@ def main():
     if not os.path.exists(PASTA_GRAVACOES):
         os.makedirs(PASTA_GRAVACOES)
         print(f"Pasta '{PASTA_GRAVACOES}' criada.")
-        
+    
+    # --- NOVO: Inicialização dos Workers das Câmeras ---
+    print("Iniciando workers das câmeras...")
+    for cam_id, source in CAMERA_SOURCES.items():
+        worker = CameraWorker(cam_id, source)
+        worker.start() # Inicia a thread (o loop 'run()' da classe)
+        g_cameras[cam_id] = worker # Armazena o worker no dicionário global
+    
+    print("Todos os workers iniciados.")
     print(f"Iniciando servidor Flask em http://127.0.0.1:5000")
     
-    app.run(
-        host='0.0.0.0',
-        port=5000,
-        debug=False, # Muito importante ser False
-        threaded=True  # Essencial para rodar tudo em paralelo
-    )
+    app.run(host='0.0.0.0', port=5000, debug=False, threaded=True)
 
 if __name__ == '__main__':
     try:
@@ -345,11 +380,7 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print("\nServidor interrompido pelo usuário (Ctrl+C).")
     finally:
-        # Limpeza final
-        if cap.isOpened():
-            cap.release()
-            print("Câmera liberada.")
-        with lock:
-            if video_writer is not None:
-                video_writer.release()
-                print("Gravação finalizada (limpeza).")
+        # Limpeza final: libera todas as câmeras
+        print("Encerrando... liberando câmeras.")
+        for cam_id in g_cameras:
+            g_cameras[cam_id].release()
