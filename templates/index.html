@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu VMS - Gerenciador de Câmeras</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; color: #333; }
+        .container { display: flex; flex-wrap: wrap; justify-content: center; padding: 20px; }
+        .main-content { flex: 2; min-width: 650px; text-align: center; margin: 10px; }
+        .sidebar { flex: 1; min-width: 300px; margin: 10px; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #0056b3; }
+        h2 { color: #333; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+        #video-container { border: 2px solid #ccc; display: inline-block; padding: 5px; background-color: #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        #video-stream { width: 640px; height: 480px; background-color: #000; display: block; }
+        
+        .controls { margin-top: 15px; }
+        .btn { padding: 10px 20px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; color: white; margin: 5px; }
+        
+        /* Controles Manuais */
+        #btn-start { background-color: #28a745; }
+        #btn-stop { background-color: #dc3545; }
+        
+        /* NOVO: Controle de Detecção */
+        #btn-motion { background-color: #17a2b8; } /* Azul Ciano */
+        #btn-motion.active { background-color: #ffc107; color: #333; } /* Amarelo */
+
+        #status-message { margin-top: 10px; font-size: 18px; color: #555; font-weight: bold; }
+        
+        /* Player (igual) */
+        #video-player-container { margin-top: 20px; background-color: #000; }
+        #video-player { width: 100%; max-width: 640px; border: 1px solid #ddd; }
+        #btn-refresh { background-color: #007bff; }
+        #video-list { list-style-type: none; padding: 0; max-height: 400px; overflow-y: auto; }
+        #video-list li { padding: 10px; border-bottom: 1px solid #eee; }
+        #video-list a { text-decoration: none; color: #0056b3; cursor: pointer; font-weight: bold; }
+        #video-list a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <h1>Gerenciador de Câmeras (VMS)</h1>
+            <div id="video-container">
+                <img id="video-stream" src="{{ url_for('video_feed') }}" alt="Stream de Vídeo">
+            </div>
+            
+            <div id="status-message">Status: Carregando...</div>
+
+            <h2>Controle Manual</h2>
+            <div class="controls">
+                <button id="btn-start" class="btn">Iniciar Gravação Manual</button>
+                <button id="btn-stop" class="btn">Parar Gravação Manual</button>
+            </div>
+
+            <h2>Controle Automático</h2>
+            <div class="controls">
+                <button id="btn-motion" class="btn">Ligar Detecção de Movimento</button>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <h2>Gravações Salvas</h2>
+            <button id="btn-refresh" class="btn">Atualizar Lista</button>
+            <div id="video-player-container">
+                <video id="video-player" controls>
+                    <source src="" type="video/webm">
+                </video>
+            </div>
+            <ul id="video-list">
+                </ul>
+        </div>
+    </div>
+
+    <script>
+        // Elementos de Status e Botões
+        const statusMessage = document.getElementById('status-message');
+        
+        // Controles Manuais
+        const btnStart = document.getElementById('btn-start');
+        const btnStop = document.getElementById('btn-stop');
+        
+        // NOVO: Controles de Detecção
+        const btnMotion = document.getElementById('btn-motion');
+
+        // Player (igual)
+        const btnRefresh = document.getElementById('btn-refresh');
+        const videoList = document.getElementById('video-list');
+        const videoPlayer = document.getElementById('video-player');
+
+        // --- Funções de Comunicação ---
+
+        // Função genérica para enviar comandos manuais
+        async function sendManualCommand(command) {
+            try {
+                const response = await fetch('/' + command, { method: 'POST' });
+                const data = await response.json();
+                statusMessage.textContent = 'Status: ' + data.status;
+            } catch (error) {
+                console.error('Erro ao enviar comando:', error);
+                statusMessage.textContent = 'Status: Erro de comunicação';
+            }
+        }
+
+        // NOVO: Função para Ligar/Desligar a Detecção
+        async function toggleMotionDetection() {
+            try {
+                const response = await fetch('/toggle_motion_detection', { method: 'POST' });
+                const data = await response.json();
+                statusMessage.textContent = 'Status: ' + data.status;
+                updateMotionButton(data.enabled);
+            } catch (error) {
+                console.error('Erro ao alternar detecção:', error);
+                statusMessage.textContent = 'Status: Erro de comunicação';
+            }
+        }
+        
+        // NOVO: Função para atualizar a aparência do botão de detecção
+        function updateMotionButton(isEnabled) {
+            if (isEnabled) {
+                btnMotion.textContent = 'Desligar Detecção de Movimento';
+                btnMotion.classList.add('active'); // Adiciona a cor amarela
+            } else {
+                btnMotion.textContent = 'Ligar Detecção de Movimento';
+                btnMotion.classList.remove('active'); // Remove a cor amarela
+            }
+        }
+        
+        // NOVO: Função para checar o status ao carregar a página
+        async function loadInitialStatus() {
+            try {
+                const response = await fetch('/get_status');
+                const data = await response.json();
+                statusMessage.textContent = 'Status: ' + data.status;
+                updateMotionButton(data.motion_enabled);
+            } catch (error) {
+                statusMessage.textContent = 'Status: Offline';
+            }
+        }
+
+        // --- Event Listeners (Botões) ---
+        btnStart.addEventListener('click', () => sendManualCommand('start_recording'));
+        btnStop.addEventListener('click', () => sendManualCommand('stop_recording'));
+        btnMotion.addEventListener('click', toggleMotionDetection);
+
+        // --- Lógica do Player (igual) ---
+        async function loadVideoList() {
+            try {
+                const response = await fetch('/list_videos');
+                const data = await response.json();
+                videoList.innerHTML = '';
+                if (data.videos.length === 0) {
+                    videoList.innerHTML = '<li>Nenhuma gravação encontrada.</li>';
+                    return;
+                }
+                data.videos.forEach(filename => {
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.textContent = filename;
+                    a.href = '#';
+                    a.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        playVideo(filename);
+                    });
+                    li.appendChild(a);
+                    videoList.appendChild(li);
+                });
+            } catch (error) {
+                videoList.innerHTML = '<li>Erro ao carregar vídeos.</li>';
+            }
+        }
+        function playVideo(filename) {
+            const videoSource = videoPlayer.querySelector('source');
+            const videoUrl = '/playback/' + filename;
+            videoSource.setAttribute('src', videoUrl);
+            videoPlayer.load();
+            videoPlayer.play();
+        }
+        btnRefresh.addEventListener('click', loadVideoList);
+        
+        // --- Carregamento Inicial ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadInitialStatus(); // NOVO: Carrega o status da detecção
+            loadVideoList();     // Carrega a lista de vídeos
+        });
+
+    </script>
+</body>
+</html>

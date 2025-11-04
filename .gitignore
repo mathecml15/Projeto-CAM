@@ -1,0 +1,8 @@
+# Pasta de gravações
+gravacoes/
+
+# Arquivos de cache do Python
+__pycache__/
+
+# Arquivos de compilador (caso você tenha)
+*.pyc
