@@ -1,0 +1,16 @@
+# Dependências do projeto VMS - Gerenciador de Câmeras
+
+# Servidor web
+flask>=2.3.0
+
+# Processamento de vídeo e câmeras
+opencv-python>=4.8.0
+
+# Detecção de objetos com IA (YOLOv8)
+# Descomente a linha abaixo para instalar a detecção de objetos
+ultralytics>=8.0.0
+
+# Dependências adicionais (geralmente instaladas automaticamente)
+numpy>=1.24.0
+Pillow>=9.5.0
+

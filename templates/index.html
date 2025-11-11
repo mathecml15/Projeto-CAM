@@ -70,7 +70,49 @@
         .btn-stop { background-color: #dc3545; }
         .btn-motion { background-color: #17a2b8; }
         .btn-motion.active { background-color: #ffc107; color: #333; }
+        .btn-objects { background-color: #6f42c1; }
+        .btn-objects.active { background-color: #9c27b0; color: white; }
         .btn-refresh { background-color: #007bff; }
+        
+        /* Estatísticas de Detecção de Objetos */
+        .detection-stats {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+            font-size: 13px;
+        }
+        .detection-stats h4 {
+            margin: 0 0 10px 0;
+            color: #6f42c1;
+            font-size: 14px;
+        }
+        .detection-stats .stat-item {
+            margin: 5px 0;
+            padding: 5px;
+            background-color: white;
+            border-radius: 3px;
+        }
+        .detection-stats .stat-label {
+            font-weight: bold;
+            color: #555;
+        }
+        .detection-stats .stat-value {
+            color: #333;
+        }
+        .detection-stats .class-count {
+            display: inline-block;
+            margin: 2px 5px;
+            padding: 2px 8px;
+            background-color: #e9ecef;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .detection-stats .no-stats {
+            color: #999;
+            font-style: italic;
+        }
         
         /* Player (igual) */
         #video-player-container { margin-top: 20px; background-color: #000; }
@@ -110,6 +152,22 @@
                 <button class="btn btn-start">Gravar Manual</button>
                 <button class="btn btn-stop">Parar Manual</button>
                 <button class="btn btn-motion">Ligar Detecção</button>
+                <button class="btn btn-objects">Ligar IA Detecção</button>
+            </div>
+            <div class="detection-stats" style="display: none;">
+                <h4>📊 Estatísticas de Detecção de Objetos</h4>
+                <div class="stat-item">
+                    <span class="stat-label">Total de Detecções:</span>
+                    <span class="stat-value stats-total">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Última Detecção:</span>
+                    <span class="stat-value stats-last">Nunca</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Objetos Detectados:</span>
+                    <div class="stats-classes no-stats">Nenhum objeto detectado ainda</div>
+                </div>
             </div>
         </div>
     </template>
@@ -180,6 +238,8 @@
                 sendCameraCommand(camId, 'stop_recording');
             } else if (button.classList.contains('btn-motion')) {
                 toggleMotionDetection(camId);
+            } else if (button.classList.contains('btn-objects')) {
+                toggleObjectDetection(camId);
             }
         }
 
@@ -227,6 +287,18 @@
                 const data = await response.json();
                 statusElement.textContent = 'Status: ' + data.status;
                 updateMotionButton(camId, data.motion_enabled);
+                
+                // Atualiza botão de detecção de objetos se disponível
+                if (data.object_detection_enabled !== undefined) {
+                    updateObjectDetectionButton(camId, data.object_detection_enabled);
+                    // Mostra/esconde área de estatísticas
+                    const statsArea = pod.querySelector('.detection-stats');
+                    if (data.object_detection_enabled) {
+                        statsArea.style.display = 'block';
+                        // Inicia atualização periódica de estatísticas
+                        startStatsUpdate(camId);
+                    }
+                }
             } catch (error) {
                 statusElement.textContent = 'Status: Offline';
             }
@@ -244,6 +316,152 @@
             } else {
                 motionButton.textContent = 'Ligar Detecção';
                 motionButton.classList.remove('active');
+            }
+        }
+        
+        /**
+         * Liga/desliga a detecção de objetos (IA) para uma câmera específica
+         */
+        async function toggleObjectDetection(camId) {
+            const pod = document.querySelector(`.camera-pod[data-cam-id="${camId}"]`);
+            const statusElement = pod.querySelector('.status-message');
+            const statsArea = pod.querySelector('.detection-stats');
+            
+            try {
+                const response = await fetch(`/toggle_object_detection/${camId}`, { method: 'POST' });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusElement.textContent = 'Status: ' + data.status;
+                    updateObjectDetectionButton(camId, data.enabled);
+                    
+                    // Mostra/esconde área de estatísticas
+                    if (data.enabled) {
+                        statsArea.style.display = 'block';
+                        startStatsUpdate(camId);
+                    } else {
+                        statsArea.style.display = 'none';
+                        stopStatsUpdate(camId);
+                    }
+                } else {
+                    statusElement.textContent = 'Status: Erro - ' + (data.error || 'Erro desconhecido');
+                }
+            } catch (error) {
+                console.error(`Erro ao alternar detecção de objetos para ${camId}:`, error);
+                statusElement.textContent = 'Status: Erro de comunicação';
+            }
+        }
+        
+        /**
+         * Atualiza a aparência do botão de detecção de objetos
+         */
+        function updateObjectDetectionButton(camId, isEnabled) {
+            const pod = document.querySelector(`.camera-pod[data-cam-id="${camId}"]`);
+            const objectButton = pod.querySelector('.btn-objects');
+            if (isEnabled) {
+                objectButton.textContent = 'Desligar IA Detecção';
+                objectButton.classList.add('active');
+            } else {
+                objectButton.textContent = 'Ligar IA Detecção';
+                objectButton.classList.remove('active');
+            }
+        }
+        
+        // Dicionário para armazenar os intervalos de atualização de estatísticas
+        const statsUpdateIntervals = {};
+        
+        /**
+         * Inicia a atualização periódica de estatísticas para uma câmera
+         */
+        function startStatsUpdate(camId) {
+            // Para qualquer atualização anterior
+            stopStatsUpdate(camId);
+            
+            // Atualiza imediatamente
+            updateDetectionStats(camId);
+            
+            // Configura atualização a cada 2 segundos
+            statsUpdateIntervals[camId] = setInterval(() => {
+                updateDetectionStats(camId);
+            }, 2000);
+        }
+        
+        /**
+         * Para a atualização periódica de estatísticas para uma câmera
+         */
+        function stopStatsUpdate(camId) {
+            if (statsUpdateIntervals[camId]) {
+                clearInterval(statsUpdateIntervals[camId]);
+                delete statsUpdateIntervals[camId];
+            }
+        }
+        
+        /**
+         * Atualiza as estatísticas de detecção de objetos na interface
+         */
+        async function updateDetectionStats(camId) {
+            const pod = document.querySelector(`.camera-pod[data-cam-id="${camId}"]`);
+            if (!pod) return;
+            
+            const statsArea = pod.querySelector('.detection-stats');
+            const totalElement = pod.querySelector('.stats-total');
+            const lastElement = pod.querySelector('.stats-last');
+            const classesElement = pod.querySelector('.stats-classes');
+            
+            try {
+                const response = await fetch(`/get_object_detection_stats/${camId}`);
+                const data = await response.json();
+                
+                if (response.ok && !data.error) {
+                    // Atualiza total de detecções
+                    totalElement.textContent = data.total_detections || 0;
+                    
+                    // Atualiza última detecção
+                    if (data.last_detection_timestamp > 0) {
+                        const lastDate = new Date(data.last_detection_timestamp * 1000);
+                        const now = new Date();
+                        const diffSeconds = Math.floor((now - lastDate) / 1000);
+                        
+                        if (diffSeconds < 60) {
+                            lastElement.textContent = `${diffSeconds}s atrás`;
+                        } else if (diffSeconds < 3600) {
+                            lastElement.textContent = `${Math.floor(diffSeconds / 60)}min atrás`;
+                        } else {
+                            lastElement.textContent = lastDate.toLocaleTimeString('pt-BR');
+                        }
+                    } else {
+                        lastElement.textContent = 'Nunca';
+                    }
+                    
+                    // Atualiza contadores por classe
+                    if (data.detection_counts && Object.keys(data.detection_counts).length > 0) {
+                        classesElement.innerHTML = '';
+                        classesElement.classList.remove('no-stats');
+                        
+                        // Ordena por quantidade (maior primeiro)
+                        const sortedClasses = Object.entries(data.detection_counts)
+                            .sort((a, b) => b[1] - a[1]);
+                        
+                        sortedClasses.forEach(([className, count]) => {
+                            const span = document.createElement('span');
+                            span.className = 'class-count';
+                            span.textContent = `${className}: ${count}`;
+                            span.title = `${count} ${className}(s) detectado(s)`;
+                            classesElement.appendChild(span);
+                        });
+                    } else {
+                        classesElement.innerHTML = 'Nenhum objeto detectado ainda';
+                        classesElement.classList.add('no-stats');
+                    }
+                } else {
+                    // Erro ou detecção desabilitada
+                    totalElement.textContent = '0';
+                    lastElement.textContent = 'Nunca';
+                    classesElement.innerHTML = 'Detecção desabilitada ou não disponível';
+                    classesElement.classList.add('no-stats');
+                }
+            } catch (error) {
+                console.error(`Erro ao atualizar estatísticas para ${camId}:`, error);
             }
         }
 
