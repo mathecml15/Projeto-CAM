@@ -1,161 +1,293 @@
-# Projeto VMS - Gerenciador de Câmeras
+# 📹 Sistema VMS - Gerenciador de Câmeras
 
-Sistema de gerenciamento de múltiplas câmeras com gravação e detecção de movimento.
+Sistema completo de gerenciamento de câmeras (Video Management System) com autenticação de usuários, gravação automática, detecção de movimento e inteligência artificial para detecção de objetos.
+
+## ✨ Funcionalidades
+
+- 🔐 **Autenticação Segura**: Sistema de login e cadastro com senhas criptografadas
+- 📹 **Gerenciamento de Múltiplas Câmeras**: Suporte para webcams e câmeras IP (RTSP)
+- 💾 **Gravação Automática**: Grave vídeos manualmente ou automaticamente ao detectar movimento
+- 🎯 **Detecção de Movimento**: Algoritmo inteligente para detectar movimentos em tempo real
+- 🤖 **Detecção de Objetos com IA**: YOLOv8 para identificar pessoas, carros, animais e mais
+- 📊 **Estatísticas em Tempo Real**: Visualize estatísticas de detecções de objetos
+- 🌐 **Interface Web Moderna**: Design responsivo e intuitivo
+- 🗄️ **Banco de Dados MySQL**: Armazenamento robusto de usuários e logs
+
+## 🚀 Tecnologias Utilizadas
+
+- **Backend**: Python 3.11+, Flask
+- **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
+- **Visão Computacional**: OpenCV
+- **Inteligência Artificial**: Ultralytics YOLOv8
+- **Banco de Dados**: MySQL 8.0+
+- **Segurança**: SHA-256 + Salt, Sessões seguras
+
+## 📋 Pré-requisitos
+
+- Python 3.11 ou superior
+- MySQL 8.0 ou superior
+- Webcam ou câmera IP (opcional)
+- 4GB RAM mínimo (8GB recomendado para IA)
+
+## 🔧 Instalação
+
+### 1. Clone o repositório
+
+```bash
+git clone https://github.com/seu-usuario/vms-camera-manager.git
+cd vms-camera-manager
+```
+
+### 2. Instale as dependências
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Configure o MySQL
+
+Execute o script SQL no MySQL Workbench ou linha de comando:
+
+```bash
+mysql -u root -p < "banco de dados MYSQL.sql"
+```
+
+Ou manualmente:
+
+```sql
+CREATE DATABASE servico_auth CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE servico_auth;
+
+CREATE TABLE users(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    cpf VARCHAR(14) UNIQUE NOT NULL,
+    data_nascimento DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_login TIMESTAMP NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    INDEX idx_username (username),
+    INDEX idx_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+
+### 4. Configure as variáveis de ambiente
+
+Copie o arquivo de exemplo e edite com suas credenciais:
+
+```bash
+cp .env.example .env
+```
+
+Edite o arquivo `.env` e configure:
+
+```env
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=servico_auth
+DB_USER=root
+DB_PASSWORD=sua_senha_mysql
+
+SECRET_KEY=sua_chave_secreta_aqui
+SALT_SECRET=sua_chave_secreta_aqui
+```
+
+**⚠️ IMPORTANTE:** O arquivo `.env` contém informações sensíveis. **NUNCA** suba este arquivo para o GitHub!
+
+### 5. Execute o servidor
+
+```bash
+python servidor.py
+```
+
+### 6. Acesse o sistema
+
+Abra seu navegador e acesse:
+
+```
+http://127.0.0.1:5000
+```
+
+## 📖 Como Usar
+
+### Primeiro Acesso
+
+1. Acesse `http://127.0.0.1:5000`
+2. Clique em **"Cadastre-se aqui"**
+3. Preencha seus dados:
+   - Nome de usuário
+   - Email
+   - CPF
+   - Data de nascimento
+   - Senha
+4. Faça login com suas credenciais
+
+### Gerenciando Câmeras
+
+1. Na página principal, você verá todas as câmeras configuradas
+2. **Gravar**: Inicia gravação manual
+3. **Parar**: Para a gravação
+4. **Detecção de Movimento**: Ativa/desativa gravação automática ao detectar movimento
+5. **IA Detecção**: Ativa/desativa detecção de objetos com inteligência artificial
+
+### Visualizando Gravações
+
+- As gravações ficam na pasta `gravacoes/`
+- Lista de vídeos gravados aparece abaixo de cada câmera
+- Clique em um vídeo para reproduzir
+
+### Configurando Câmeras
+
+Edite o arquivo `config.py`:
+
+```python
+CAMERA_SOURCES = {
+    "webcam": 0,  # Webcam padrão
+    "camera_ip": "rtsp://usuario:senha@192.168.1.100:554/stream1"  # Câmera IP
+}
+```
+
+## 📊 Detecção de Objetos (IA)
+
+O sistema usa YOLOv8 para detectar:
+
+- 👥 Pessoas
+- 🚗 Veículos (carros, motos, caminhões, ônibus)
+- 🐕 Animais (cães, gatos, pássaros, cavalos)
+- 📦 Objetos diversos (80+ classes)
+
+### Configurações de IA
+
+No arquivo `config.py`:
+
+```python
+# Modelo YOLO (nano, small, medium, large, x-large)
+YOLO_MODEL = 'yolov8n.pt'  # 'n' = nano (mais rápido)
+
+# Confiança mínima (0.0 a 1.0)
+OBJECT_CONFIDENCE_THRESHOLD = 0.5
+
+# Filtrar classes específicas
+OBJECT_CLASSES_FILTER = ['person', 'car', 'dog']  # None = todas
+
+# Gravar automaticamente ao detectar
+AUTO_RECORD_ON_OBJECTS = ['person']  # None = desativado
+```
 
 ## 📁 Estrutura do Projeto
 
-O projeto está dividido em vários arquivos para facilitar a organização e manutenção:
+```
+vms-camera-manager/
+├── servidor.py              # Servidor principal
+├── config.py                # Configurações do sistema
+├── database.py              # Gerenciamento do banco de dados
+├── auth.py                  # Sistema de autenticação
+├── auth_routes.py           # Rotas de login/cadastro
+├── routes.py                # Rotas da aplicação
+├── camera_worker.py         # Thread de câmera
+├── video_stream.py          # Streaming de vídeo
+├── object_detector.py       # Detecção de objetos IA
+├── templates/
+│   ├── index.html          # Interface principal
+│   ├── login.html          # Página de login
+│   └── register.html       # Página de cadastro
+├── gravacoes/              # Vídeos gravados (ignorado pelo Git)
+├── requirements.txt        # Dependências Python
+├── .env                    # Variáveis de ambiente (NÃO versionar!)
+├── .env.example           # Exemplo de configuração
+└── README.md              # Este arquivo
+```
 
-### 📄 `servidor.py` (Arquivo Principal)
-- **O que faz**: Inicia o servidor Flask e coordena todos os módulos
-- **Quando usar**: Este é o arquivo que você roda para iniciar o servidor
-- **Comando**: `python servidor.py`
+## 🔒 Segurança
 
-### ⚙️ `config.py` (Configurações)
-- **O que faz**: Contém todas as configurações do projeto
-- **O que tem aqui**:
-  - Definição das câmeras (`CAMERA_SOURCES`)
-  - Nome da pasta de gravações (`PASTA_GRAVACOES`)
-  - Configurações de detecção de movimento (`MOTION_COOLDOWN`, `MIN_CONTOUR_AREA`)
-  - Dicionário global de câmeras (`g_cameras`)
-- **Quando modificar**: Quando quiser adicionar câmeras ou mudar configurações
+- ✅ Senhas criptografadas com SHA-256 + Salt
+- ✅ Variáveis de ambiente para informações sensíveis
+- ✅ Proteção contra SQL Injection
+- ✅ Sessões seguras com cookies HttpOnly
+- ✅ Validação de dados no backend
 
-### 🎥 `camera_worker.py` (Gerenciador de Câmera)
-- **O que faz**: Contém a classe `CameraWorker` que gerencia cada câmera individualmente
-- **Responsabilidades**:
-  - Ler frames da câmera continuamente
-  - Processar detecção de movimento
-  - Gravar vídeo quando necessário
-  - Armazenar frames para transmissão ao vivo
-- **Quando modificar**: Quando quiser alterar a lógica de detecção de movimento ou gravação
+### Boas Práticas
 
-### 📺 `video_stream.py` (Streaming de Vídeo)
-- **O que faz**: Gera o stream de vídeo ao vivo para exibição no navegador
-- **Função principal**: `gerar_frames(cam_id)` - codifica frames em JPEG e envia para o navegador
-- **Quando modificar**: Quando quiser alterar a qualidade ou formato do stream
-
-### 🛣️ `routes.py` (Rotas da API)
-- **O que faz**: Contém todas as rotas (endpoints) da API Flask
-- **Rotas disponíveis**:
-  - `GET /` - Página principal (interface HTML)
-  - `GET /get_cameras` - Lista todas as câmeras disponíveis
-  - `GET /get_status/<cam_id>` - Obtém status de uma câmera
-  - `GET /video_feed/<cam_id>` - Stream de vídeo ao vivo
-  - `POST /start_recording/<cam_id>` - Inicia gravação manual
-  - `POST /stop_recording/<cam_id>` - Para gravação manual
-  - `POST /toggle_motion_detection/<cam_id>` - Liga/desliga detecção de movimento
-  - `GET /list_videos` - Lista vídeos gravados
-  - `GET /playback/<filename>` - Reproduz um vídeo gravado
-- **Quando modificar**: Quando quiser adicionar novas funcionalidades ou endpoints
-
-### 📄 `templates/index.html` (Interface Web)
-- **O que faz**: Interface HTML que o usuário vê no navegador
-- **Funcionalidades**:
-  - Mostra vídeo ao vivo de cada câmera
-  - Botões para controlar gravação
-  - Botão para ligar/desligar detecção de movimento
-  - Player para assistir gravações
-
-## 🚀 Como Usar
-
-1. **Configure suas câmeras** no arquivo `config.py`:
-   ```python
-   CAMERA_SOURCES = {
-       "webcam": 0,  # Webcam USB
-       # "corredor": "rtsp://usuario:senha@192.168.1.100:554/stream1"  # Câmera IP
-   }
-   ```
-
-2. **Instale as dependências**:
+1. **Nunca** commite o arquivo `.env`
+2. Use senhas fortes para o MySQL
+3. Gere chaves secretas aleatórias:
    ```bash
-   pip install flask opencv-python
+   python -c "import secrets; print(secrets.token_hex(32))"
    ```
+4. Em produção, use HTTPS (configure `SESSION_COOKIE_SECURE = True`)
 
-3. **Execute o servidor**:
-   ```bash
-   python servidor.py
-   ```
+## 🐛 Troubleshooting
 
-4. **Acesse a interface**:
-   Abra o navegador em `http://127.0.0.1:5000`
+### Erro: "No module named 'cv2'"
 
-## 📝 Como Adicionar uma Nova Câmera
+```bash
+pip install opencv-python
+```
 
-1. Abra o arquivo `config.py`
-2. Adicione uma nova entrada no dicionário `CAMERA_SOURCES`:
-   ```python
-   CAMERA_SOURCES = {
-       "webcam": 0,
-       "nova_camera": 1,  # Para uma segunda webcam USB
-       # ou
-       # "camera_ip": "rtsp://usuario:senha@192.168.1.100:554/stream1"
-   }
-   ```
-3. Reinicie o servidor
+### Erro: "No module named 'pymysql'"
 
-## 🔧 Ajustando a Sensibilidade da Detecção de Movimento
+```bash
+pip install pymysql
+```
 
-No arquivo `config.py`, você pode ajustar:
+### Erro: "Access denied for user"
 
-- **`MIN_CONTOUR_AREA`**: Área mínima de movimento (em pixels)
-  - Valores menores = mais sensível (detecta movimentos pequenos)
-  - Valores maiores = menos sensível (só detecta movimentos grandes)
+Verifique as credenciais no arquivo `.env`:
+- `DB_USER` e `DB_PASSWORD` devem estar corretos
+- O usuário deve ter permissões no banco `servico_auth`
 
-- **`MOTION_COOLDOWN`**: Tempo de espera após movimento antes de parar a gravação (em segundos)
-  - Valores menores = para de gravar mais rápido
-  - Valores maiores = continua gravando por mais tempo após o movimento
+### Erro: "Can't connect to MySQL server"
 
-## 📚 Entendendo o Código
+- Verifique se o MySQL está rodando
+- Confirme a porta (padrão: 3306)
+- Teste a conexão: `mysql -u root -p`
 
-### Fluxo de Funcionamento
+### Câmera não funciona
 
-1. **Inicialização** (`servidor.py`):
-   - Cria a pasta de gravações
-   - Cria um `CameraWorker` para cada câmera
-   - Inicia cada worker em uma thread separada
-   - Inicia o servidor Flask
+- Verifique se a webcam está conectada
+- Teste com ID diferente: `0`, `1`, `2`
+- Para câmeras IP, verifique a URL RTSP
 
-2. **Processamento de Frames** (`camera_worker.py`):
-   - Cada câmera lê frames continuamente em um loop
-   - Se detecção de movimento estiver ativa, processa cada frame
-   - Se detectar movimento, inicia gravação automaticamente
-   - Salva frames no arquivo de vídeo se estiver gravando
-   - Armazena o último frame para transmissão ao vivo
+## 📈 Roadmap
 
-3. **Streaming** (`video_stream.py`):
-   - Pega o último frame da câmera
-   - Codifica em JPEG
-   - Envia para o navegador em formato MJPEG
+- [ ] Suporte a múltiplos usuários com permissões
+- [ ] Notificações por email/WhatsApp
+- [ ] Dashboard com gráficos de estatísticas
+- [ ] API REST completa
+- [ ] App mobile (React Native)
+- [ ] Reconhecimento facial
+- [ ] Suporte a áudio
+- [ ] Gravação em nuvem (AWS S3, Google Cloud)
+- [ ] Docker e Kubernetes
 
-4. **API** (`routes.py`):
-   - Recebe comandos do navegador (gravar, parar, etc.)
-   - Atualiza o estado das câmeras
-   - Retorna informações em formato JSON
+## 🤝 Contribuindo
 
-## 🐛 Resolução de Problemas
+Contribuições são bem-vindas! Por favor:
 
-### Câmera não abre
-- Verifique se a câmera está conectada
-- Verifique se o número da câmera está correto (0, 1, 2, etc.)
-- Para câmeras IP, verifique o endereço RTSP
-
-### Vídeo não aparece na interface
-- Verifique se a câmera está funcionando corretamente
-- Verifique os logs no console para erros
-- Tente recarregar a página
-
-### Detecção de movimento não funciona
-- Certifique-se de que a detecção está ativada (botão "Ligar Detecção")
-- Aguarde alguns segundos para o fundo estático ser definido
-- Ajuste `MIN_CONTOUR_AREA` se necessário
-
-## 📦 Dependências
-
-- **Flask**: Servidor web
-- **opencv-python**: Processamento de vídeo e câmeras
-- **threading**: Execução paralela (já vem com Python)
+1. Fork o projeto
+2. Crie uma branch (`git checkout -b feature/nova-funcionalidade`)
+3. Commit suas mudanças (`git commit -am 'Adiciona nova funcionalidade'`)
+4. Push para a branch (`git push origin feature/nova-funcionalidade`)
+5. Abra um Pull Request
 
 ## 📄 Licença
 
-Este projeto é para fins educacionais.
+Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
 
+## 👨‍💻 Autor
+
+Desenvolvido com ❤️ por [Seu Nome]
+
+## 📞 Suporte
+
+Se tiver dúvidas ou problemas:
+
+1. Verifique a seção [Troubleshooting](#-troubleshooting)
+2. Abra uma [Issue](https://github.com/seu-usuario/vms-camera-manager/issues)
+3. Entre em contato: seu-email@exemplo.com
+
+---
+
+⭐ Se este projeto foi útil para você, considere dar uma estrela no GitHub!

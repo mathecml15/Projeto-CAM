@@ -46,8 +46,18 @@ from routes import registrar_rotas
 # Cria a aplicação Flask (servidor web)
 app = Flask(__name__)
 
+# Configuração de segurança para sessões
+# SECRET_KEY é usada para criptografar as sessões (cookies)
+# A chave é carregada do arquivo .env por segurança (nunca coloque no código!)
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+app.config['SESSION_COOKIE_SECURE'] = False  # True em produção com HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Protege contra XSS
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Protege contra CSRF
+
 # Registra todas as rotas no app
-registrar_rotas(app)
+from auth_routes import registrar_rotas_auth
+registrar_rotas_auth(app)  # Registra rotas de autenticação primeiro
+registrar_rotas(app)  # Registra rotas principais (protegidas)
 
 # ============================================================================
 # FUNÇÃO PRINCIPAL
@@ -58,6 +68,17 @@ def main():
     Função principal que inicia o servidor.
     Ela é executada quando o programa é rodado.
     """
+    # Inicializa o banco de dados (se estiver usando)
+    try:
+        from database import init_database
+        init_database()
+        print("Banco de dados inicializado.")
+    except ImportError:
+        print("AVISO: Módulo database.py não encontrado. Usando armazenamento JSON (legado).")
+    except Exception as e:
+        print(f"AVISO: Erro ao inicializar banco de dados: {e}")
+        print("Continuando com armazenamento JSON (legado)...")
+    
     # Cria a pasta de gravações se ela não existir
     if not os.path.exists(PASTA_GRAVACOES):
         os.makedirs(PASTA_GRAVACOES)  # Cria a pasta

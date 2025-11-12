@@ -6,6 +6,51 @@
     <title>Meu VMS - Gerenciador de Câmeras</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; color: #333; }
+        
+        /* Header com informações do usuário */
+        .header {
+            background-color: #0056b3;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            width: auto;
+            text-align: left;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-info span {
+            font-weight: bold;
+        }
+        
+        .btn-logout {
+            padding: 8px 15px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-logout:hover {
+            background-color: #c82333;
+        }
+        
         .container { display: flex; flex-wrap: wrap; padding: 20px; }
         
         /* NOVO: Coluna de Câmeras (conteúdo principal) */
@@ -32,7 +77,6 @@
             top: 20px;
         }
 
-        h1 { width: 100%; text-align: center; color: #0056b3; }
         h2 { color: #333; border-bottom: 2px solid #eee; padding-bottom: 5px; }
 
         /* NOVO: Estilo do "Bloco" de cada câmera */
@@ -124,8 +168,16 @@
     </style>
 </head>
 <body>
+    <!-- Header com informações do usuário -->
+    <div class="header">
+        <h1>🎥 Gerenciador de Múltiplas Câmeras (VMS)</h1>
+        <div class="user-info">
+            <span>👤 {{ user if user else 'Usuário' }}</span>
+            <a href="/logout" class="btn-logout">Sair</a>
+        </div>
+    </div>
+    
     <div class="container">
-        <h1>Gerenciador de Múltiplas Câmeras (VMS)</h1>
 
         <div class="camera-column" id="camera-column">
             </div>

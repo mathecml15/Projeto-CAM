@@ -1,8 +1,49 @@
-# Pasta de gravações
-gravacoes/
+# Variáveis de ambiente (CONTÉM SENHAS - NUNCA SUBIR!)
+.env
 
-# Arquivos de cache do Python
+# Arquivos de usuários (contém senhas hasheadas)
+users.json
+
+# Banco de dados SQLite
+*.db
+*.sqlite
+*.sqlite3
+vms_database.db
+
+# Arquivos Python compilados
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
 
-# Arquivos de compilador (caso você tenha)
-*.pyc
+# Ambientes virtuais
+venv/
+env/
+ENV/
+
+# Arquivos de IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Pastas de gravações (pode conter vídeos grandes)
+gravacoes/
+*.webm
+*.mp4
+
+# Modelos YOLO (podem ser grandes)
+*.pt
+!yolov8n.pt  # Mantém o modelo nano por padrão
+
+# Logs
+*.log
+
+# Arquivos temporários
+*.tmp
+*.temp

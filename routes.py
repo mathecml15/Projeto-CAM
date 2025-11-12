@@ -12,6 +12,7 @@ from flask import render_template, jsonify, send_from_directory, Response
 # Importa as configurações e módulos necessários
 from config import CAMERA_SOURCES, PASTA_GRAVACOES, g_cameras
 from video_stream import gerar_frames
+from auth import login_required, get_current_user
 import os
 
 
@@ -28,18 +29,22 @@ def registrar_rotas(app):
     # ============================================================================
     
     @app.route('/')
+    @login_required  # Protege a rota - requer login
     def index():
         """
         Rota principal do servidor.
         Retorna a página HTML (index.html) que está na pasta templates/
         """
-        return render_template('index.html')
+        # Pega o usuário atual para passar para o template
+        user = get_current_user()
+        return render_template('index.html', user=user)
     
     # ============================================================================
     # ROTAS DE INFORMAÇÃO
     # ============================================================================
     
     @app.route('/get_cameras')
+    @login_required  # Protege a rota - requer login
     def get_cameras():
         """
         Retorna a lista de IDs de câmeras disponíveis.
@@ -53,6 +58,7 @@ def registrar_rotas(app):
         return jsonify(cameras=lista_cameras)
     
     @app.route('/get_status/<cam_id>')
+    @login_required  # Protege a rota - requer login
     def get_status(cam_id):
         """
         Retorna o status atual de uma câmera.
@@ -92,6 +98,7 @@ def registrar_rotas(app):
     # ============================================================================
     
     @app.route('/video_feed/<cam_id>')
+    @login_required  # Protege a rota - requer login
     def video_feed(cam_id):
         """
         Rota que fornece o stream de vídeo ao vivo de uma câmera.
@@ -109,6 +116,7 @@ def registrar_rotas(app):
     # ============================================================================
     
     @app.route('/start_recording/<cam_id>', methods=['POST'])
+    @login_required  # Protege a rota - requer login
     def start_recording(cam_id):
         """
         Inicia gravação manual de uma câmera específica.
@@ -132,6 +140,7 @@ def registrar_rotas(app):
         return jsonify(status=f"Gravando ({cam_id})...")
     
     @app.route('/stop_recording/<cam_id>', methods=['POST'])
+    @login_required  # Protege a rota - requer login
     def stop_recording(cam_id):
         """
         Para a gravação manual de uma câmera específica.
@@ -159,6 +168,7 @@ def registrar_rotas(app):
     # ============================================================================
     
     @app.route('/toggle_motion_detection/<cam_id>', methods=['POST'])
+    @login_required  # Protege a rota - requer login
     def toggle_motion_detection(cam_id):
         """
         Liga ou desliga a detecção de movimento de uma câmera.
@@ -203,6 +213,7 @@ def registrar_rotas(app):
     # ============================================================================
     
     @app.route('/toggle_object_detection/<cam_id>', methods=['POST'])
+    @login_required  # Protege a rota - requer login
     def toggle_object_detection(cam_id):
         """
         Liga ou desliga a detecção de objetos de uma câmera.
@@ -260,6 +271,7 @@ def registrar_rotas(app):
         return jsonify(status=status_msg, enabled=is_enabled)
     
     @app.route('/get_object_detection_stats/<cam_id>')
+    @login_required  # Protege a rota - requer login
     def get_object_detection_stats(cam_id):
         """
         Retorna as estatísticas de detecção de objetos de uma câmera.
@@ -289,6 +301,7 @@ def registrar_rotas(app):
     # ============================================================================
     
     @app.route('/list_videos')
+    @login_required  # Protege a rota - requer login
     def list_videos():
         """
         Retorna a lista de todos os vídeos gravados na pasta de gravações.
@@ -312,6 +325,7 @@ def registrar_rotas(app):
         return jsonify(videos=videos)
     
     @app.route('/playback/<filename>')
+    @login_required  # Protege a rota - requer login
     def playback(filename):
         """
         Envia um arquivo de vídeo para o navegador reproduzir.
