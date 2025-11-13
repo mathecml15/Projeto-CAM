@@ -472,9 +472,18 @@
             const size = formatFileSize(filename);
             const date = extractDateFromFilename(filename);
             
+            // Detecta o formato do arquivo
+            const ext = filename.split('.').pop().toLowerCase();
+            const formatBadge = getFormatBadge(ext);
+            const isConverted = ext !== 'webm';
+            
             div.innerHTML = `
                 <div class="video-info">
-                    <h3>${filename}</h3>
+                    <h3>
+                        ${filename}
+                        ${formatBadge}
+                        ${isConverted ? '<span style="color: #28a745; font-size: 12px; margin-left: 10px;">✓ Convertido</span>' : ''}
+                    </h3>
                     <p>📅 ${date}</p>
                     <p>💾 ${size}</p>
                 </div>
@@ -487,6 +496,17 @@
             `;
             
             return div;
+        }
+        
+        // Retorna badge do formato
+        function getFormatBadge(ext) {
+            const badges = {
+                'webm': '<span style="background: #0056b3; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold;">WEBM</span>',
+                'mp4': '<span style="background: #28a745; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold;">MP4</span>',
+                'avi': '<span style="background: #17a2b8; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold;">AVI</span>',
+                'mov': '<span style="background: #ffc107; color: #333; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold;">MOV</span>'
+            };
+            return badges[ext] || `<span style="background: #6c757d; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px;">${ext.toUpperCase()}</span>`;
         }
         
         // Abre modal de conversão
@@ -510,8 +530,12 @@
             const quality = document.getElementById('convert-quality').value;
             const fps = document.getElementById('convert-fps').value || null;
             
-            showMessage('Convertendo vídeo... Isso pode levar alguns minutos.', 'info');
+            showMessage('⏳ Convertendo vídeo... Isso pode levar alguns minutos. Aguarde...', 'info');
             closeModal('convert-modal');
+            
+            // Desabilita botões durante conversão
+            const buttons = document.querySelectorAll('.btn');
+            buttons.forEach(btn => btn.disabled = true);
             
             try {
                 const response = await fetch('/api/export/convert', {
@@ -522,15 +546,52 @@
                 
                 const data = await response.json();
                 
+                // Reabilita botões
+                buttons.forEach(btn => btn.disabled = false);
+                
                 if (data.success) {
-                    showMessage(`✅ ${data.message} Arquivo: ${data.output_filename}`, 'success');
-                    loadVideos();
+                    const outputFile = data.output_filename;
+                    showMessage(
+                        `✅ Conversão concluída com sucesso!<br>` +
+                        `📁 Arquivo original: ${filename}<br>` +
+                        `📁 Arquivo convertido: <strong>${outputFile}</strong><br>` +
+                        `💡 O novo arquivo aparecerá na lista abaixo.`,
+                        'success'
+                    );
+                    
+                    // Recarrega a lista de vídeos
+                    await loadVideos();
+                    
+                    // Destaca o arquivo convertido na lista
+                    setTimeout(() => {
+                        highlightVideo(outputFile);
+                    }, 500);
                 } else {
                     showMessage(`❌ Erro: ${data.message}`, 'error');
                 }
             } catch (error) {
+                buttons.forEach(btn => btn.disabled = false);
                 showMessage(`❌ Erro ao converter: ${error}`, 'error');
             }
+        }
+        
+        // Destaca um vídeo na lista
+        function highlightVideo(filename) {
+            const items = document.querySelectorAll('.video-item');
+            items.forEach(item => {
+                const h3 = item.querySelector('h3');
+                if (h3 && h3.textContent === filename) {
+                    item.style.borderLeftColor = '#28a745';
+                    item.style.backgroundColor = '#d4edda';
+                    item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // Remove o destaque após 5 segundos
+                    setTimeout(() => {
+                        item.style.borderLeftColor = '#0056b3';
+                        item.style.backgroundColor = '#f8f9fa';
+                    }, 5000);
+                }
+            });
         }
         
         // Executa extração de frames
@@ -648,9 +709,11 @@
             
             messageArea.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
             
+            // Mensagens de sucesso ficam mais tempo (10s), outras 5s
+            const timeout = type === 'success' ? 10000 : 5000;
             setTimeout(() => {
                 messageArea.innerHTML = '';
-            }, 5000);
+            }, timeout);
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }

@@ -52,3 +52,8 @@ gravacoes/
 # Arquivos temporários
 *.tmp
 *.temp
+
+# FFmpeg (opcional - remova esta linha se quiser commitar o ffmpeg no repositório)
+tools/ffmpeg/
+ffmpeg/
+*.tar.xz

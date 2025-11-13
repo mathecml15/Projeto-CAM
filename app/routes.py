@@ -345,8 +345,14 @@ def registrar_rotas(app):
             # Lista todos os arquivos na pasta
             arquivos = os.listdir(PASTA_GRAVACOES)
             
-            # Filtra apenas arquivos .webm (nossos vídeos)
-            videos = [f for f in arquivos if f.endswith(".webm")]
+            # Formatos de vídeo suportados
+            video_extensions = ['.webm', '.mp4', '.avi', '.mov']
+            
+            # Filtra apenas arquivos de vídeo (incluindo convertidos)
+            videos = [f for f in arquivos if any(f.lower().endswith(ext) for ext in video_extensions)]
+            
+            # Remove pastas (como pastas de frames extraídos)
+            videos = [f for f in videos if os.path.isfile(os.path.join(PASTA_GRAVACOES, f))]
             
             # Ordena por nome (mais recentes primeiro, se o nome tiver timestamp)
             videos = sorted(videos, reverse=True)

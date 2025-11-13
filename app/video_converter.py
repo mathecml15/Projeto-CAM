@@ -9,6 +9,7 @@ Este módulo converte vídeos entre diferentes formatos e extrai frames.
 import os
 import cv2
 import subprocess
+import sys
 from pathlib import Path
 from typing import Optional, Tuple, List
 
@@ -21,16 +22,59 @@ SUPPORTED_FORMATS = {
     'webm': {'ext': '.webm', 'codec': 'VP80', 'mime': 'video/webm'}
 }
 
+# Caminho base do projeto (pasta onde está servidor.py)
+PROJECT_ROOT = Path(__file__).parent.parent.resolve()
+
+# Possíveis locais do ffmpeg (em ordem de prioridade)
+FFMPEG_PATHS = [
+    PROJECT_ROOT / 'tools' / 'ffmpeg' / 'bin' / 'ffmpeg.exe',  # Windows na pasta do projeto
+    PROJECT_ROOT / 'tools' / 'ffmpeg' / 'bin' / 'ffmpeg',     # Linux/Mac na pasta do projeto
+    PROJECT_ROOT / 'ffmpeg' / 'bin' / 'ffmpeg.exe',           # Windows (estrutura alternativa)
+    PROJECT_ROOT / 'ffmpeg' / 'bin' / 'ffmpeg',               # Linux/Mac (estrutura alternativa)
+]
+
+
+def get_ffmpeg_path():
+    """
+    Encontra o caminho do executável ffmpeg.
+    Procura primeiro na pasta do projeto, depois no PATH do sistema.
+    
+    Returns:
+        Caminho do ffmpeg se encontrado, None caso contrário
+    """
+    # Primeiro, procura na pasta do projeto
+    for ffmpeg_path in FFMPEG_PATHS:
+        if ffmpeg_path.exists() and os.access(ffmpeg_path, os.X_OK):
+            return str(ffmpeg_path)
+    
+    # Se não encontrou no projeto, procura no PATH do sistema
+    try:
+        # Tenta executar 'ffmpeg' diretamente (está no PATH)
+        result = subprocess.run(['ffmpeg', '-version'], 
+                              capture_output=True, 
+                              check=True,
+                              timeout=5)
+        return 'ffmpeg'  # Retorna o comando direto (está no PATH)
+    except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
+        pass
+    
+    return None
+
 
 def check_ffmpeg():
     """
-    Verifica se o ffmpeg está disponível no sistema.
+    Verifica se o ffmpeg está disponível (no projeto ou no sistema).
     
     Returns:
         True se ffmpeg está disponível, False caso contrário
     """
+    ffmpeg_path = get_ffmpeg_path()
+    if not ffmpeg_path:
+        return False
+    
     try:
-        subprocess.run(['ffmpeg', '-version'], 
+        # Testa se o ffmpeg funciona
+        subprocess.run([ffmpeg_path, '-version'], 
                       capture_output=True, 
                       check=True,
                       timeout=5)
@@ -146,6 +190,11 @@ def convert_video_ffmpeg(input_path: str, output_path: str,
         return False, f"Formato não suportado: {format_type}"
     
     try:
+        # Obtém o caminho do ffmpeg
+        ffmpeg_path = get_ffmpeg_path()
+        if not ffmpeg_path:
+            return False, "ffmpeg não encontrado no projeto nem no PATH do sistema"
+        
         # Define parâmetros de qualidade para ffmpeg
         quality_params = {
             'low': ['-crf', '28', '-preset', 'fast'],
@@ -153,8 +202,8 @@ def convert_video_ffmpeg(input_path: str, output_path: str,
             'high': ['-crf', '18', '-preset', 'slow']
         }
         
-        # Comando base do ffmpeg
-        cmd = ['ffmpeg', '-i', input_path, '-y']  # -y sobrescreve arquivo existente
+        # Comando base do ffmpeg (usa o caminho encontrado)
+        cmd = [ffmpeg_path, '-i', input_path, '-y']  # -y sobrescreve arquivo existente
         
         # Adiciona parâmetros de qualidade
         cmd.extend(quality_params.get(quality, quality_params['medium']))
