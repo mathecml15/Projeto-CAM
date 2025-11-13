@@ -7,8 +7,8 @@
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; color: #333; }
         
-        /* Header com informações do usuário */
-        .header {
+        /* Navbar */
+        .navbar {
             background-color: #0056b3;
             color: white;
             padding: 15px 20px;
@@ -18,11 +18,32 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
-        .header h1 {
-            margin: 0;
+        .navbar h1 {
             font-size: 24px;
-            width: auto;
-            text-align: left;
+            margin: 0;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+        
+        .nav-links a.active {
+            background-color: rgba(255,255,255,0.3);
+            font-weight: bold;
         }
         
         .user-info {
@@ -109,9 +130,9 @@
         .camera-pod .controls { margin-top: 10px; }
 
         /* Estilos dos Botões (iguais) */
-        .btn { padding: 8px 15px; font-size: 14px; cursor: pointer; border: none; border-radius: 5px; color: white; margin: 5px; }
-        .btn-start { background-color: #28a745; }
-        .btn-stop { background-color: #dc3545; }
+        .btn { padding: 8px 15px; font-size: 14px; cursor: pointer; border: none; border-radius: 5px; color: white; margin: 5px; transition: background-color 0.3s; }
+        .btn-record { background-color: #28a745; }
+        .btn-record.recording { background-color: #dc3545; }
         .btn-motion { background-color: #17a2b8; }
         .btn-motion.active { background-color: #ffc107; color: #333; }
         .btn-objects { background-color: #6f42c1; }
@@ -168,9 +189,14 @@
     </style>
 </head>
 <body>
-    <!-- Header com informações do usuário -->
-    <div class="header">
-        <h1>🎥 Gerenciador de Múltiplas Câmeras (VMS)</h1>
+    <!-- Navbar -->
+    <div class="navbar">
+        <h1>🎥 Meu VMS</h1>
+        <div class="nav-links">
+            <a href="/" class="active">Dashboard</a>
+            <a href="/cameras">Câmeras</a>
+            <a href="/settings">Configurações</a>
+        </div>
         <div class="user-info">
             <span>👤 {{ user if user else 'Usuário' }}</span>
             <a href="/logout" class="btn-logout">Sair</a>
@@ -201,8 +227,7 @@
             <img class="video-stream" src="" alt="Stream de Vídeo" width="640" height="480">
             <div class="status-message">Status: Carregando...</div>
             <div class="controls">
-                <button class="btn btn-start">Gravar Manual</button>
-                <button class="btn btn-stop">Parar Manual</button>
+                <button class="btn btn-record">Iniciar Gravação</button>
                 <button class="btn btn-motion">Ligar Detecção</button>
                 <button class="btn btn-objects">Ligar IA Detecção</button>
             </div>
@@ -284,10 +309,8 @@
             const camId = pod.dataset.camId;
             
             // Decide qual ação tomar baseado na classe do botão
-            if (button.classList.contains('btn-start')) {
-                sendCameraCommand(camId, 'start_recording');
-            } else if (button.classList.contains('btn-stop')) {
-                sendCameraCommand(camId, 'stop_recording');
+            if (button.classList.contains('btn-record')) {
+                toggleRecording(camId);
             } else if (button.classList.contains('btn-motion')) {
                 toggleMotionDetection(camId);
             } else if (button.classList.contains('btn-objects')) {
@@ -296,18 +319,43 @@
         }
 
         /**
-         * NOVO: Envia comandos de gravação (start/stop) para uma câmera específica
+         * Alterna entre iniciar e parar gravação
          */
-        async function sendCameraCommand(camId, command) {
+        async function toggleRecording(camId) {
             const pod = document.querySelector(`.camera-pod[data-cam-id="${camId}"]`);
+            const recordButton = pod.querySelector('.btn-record');
+            const isRecording = recordButton.classList.contains('recording');
+            
+            // Decide qual comando enviar baseado no estado atual
+            const command = isRecording ? 'stop_recording' : 'start_recording';
+            
             const statusElement = pod.querySelector('.status-message');
             try {
                 const response = await fetch(`/${command}/${camId}`, { method: 'POST' });
                 const data = await response.json();
                 statusElement.textContent = 'Status: ' + data.status;
+                
+                // Atualiza a aparência do botão baseado no novo estado
+                // Se enviamos start, agora está gravando; se enviamos stop, não está mais
+                updateRecordButton(camId, !isRecording);
             } catch (error) {
                 console.error(`Erro no comando '${command}' para ${camId}:`, error);
                 statusElement.textContent = 'Status: Erro de comunicação';
+            }
+        }
+        
+        /**
+         * Atualiza a aparência do botão de gravação
+         */
+        function updateRecordButton(camId, isRecording) {
+            const pod = document.querySelector(`.camera-pod[data-cam-id="${camId}"]`);
+            const recordButton = pod.querySelector('.btn-record');
+            if (isRecording) {
+                recordButton.textContent = 'Parar Gravação';
+                recordButton.classList.add('recording');
+            } else {
+                recordButton.textContent = 'Iniciar Gravação';
+                recordButton.classList.remove('recording');
             }
         }
 
@@ -338,6 +386,11 @@
                 const response = await fetch(`/get_status/${camId}`);
                 const data = await response.json();
                 statusElement.textContent = 'Status: ' + data.status;
+                
+                // Verifica se está gravando manualmente
+                const isRecording = data.status && (data.status.includes('Gravando') || data.status.includes('gravando'));
+                updateRecordButton(camId, isRecording);
+                
                 updateMotionButton(camId, data.motion_enabled);
                 
                 // Atualiza botão de detecção de objetos se disponível

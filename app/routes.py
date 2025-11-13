@@ -7,12 +7,16 @@ Este arquivo contém todas as rotas (endpoints) da API Flask.
 Cada rota é uma função que responde a requisições HTTP específicas.
 """
 
-from flask import render_template, jsonify, send_from_directory, Response
+from flask import render_template, jsonify, send_from_directory, Response, request
 
 # Importa as configurações e módulos necessários
-from app.config import CAMERA_SOURCES, PASTA_GRAVACOES, g_cameras
+from app.config import PASTA_GRAVACOES, g_cameras
 from app.video_stream import gerar_frames
 from app.auth import login_required, get_current_user
+from app.camera_manager import (
+    load_cameras_config, add_camera, remove_camera, update_camera,
+    list_cameras, load_system_config, save_system_config
+)
 import os
 
 
@@ -53,8 +57,8 @@ def registrar_rotas(app):
         Retorna: JSON com lista de IDs das câmeras
         Exemplo: {"cameras": ["webcam", "corredor"]}
         """
-        # Pega todas as chaves do dicionário CAMERA_SOURCES (os IDs das câmeras)
-        lista_cameras = list(CAMERA_SOURCES.keys())
+        # Pega todas as chaves do dicionário g_cameras (os IDs das câmeras ativas)
+        lista_cameras = list(g_cameras.keys())
         return jsonify(cameras=lista_cameras)
     
     @app.route('/get_status/<cam_id>')
@@ -337,4 +341,124 @@ def registrar_rotas(app):
         """
         # Envia o arquivo da pasta de gravações
         return send_from_directory(PASTA_GRAVACOES, filename)
+    
+    # ============================================================================
+    # ROTAS DE PÁGINAS DE GERENCIAMENTO
+    # ============================================================================
+    
+    @app.route('/cameras')
+    @login_required
+    def cameras_page():
+        """
+        Página para gerenciar câmeras (adicionar, remover, editar).
+        """
+        user = get_current_user()
+        return render_template('cameras.html', user=user)
+    
+    @app.route('/settings')
+    @login_required
+    def settings_page():
+        """
+        Página de configurações do sistema.
+        """
+        user = get_current_user()
+        return render_template('settings.html', user=user)
+    
+    # ============================================================================
+    # API DE GERENCIAMENTO DE CÂMERAS
+    # ============================================================================
+    
+    @app.route('/api/cameras/list')
+    @login_required
+    def api_list_cameras():
+        """
+        Lista todas as câmeras configuradas.
+        """
+        cameras = list_cameras()
+        return jsonify(cameras)
+    
+    @app.route('/api/cameras/add', methods=['POST'])
+    @login_required
+    def api_add_camera():
+        """
+        Adiciona uma nova câmera.
+        """
+        data = request.get_json()
+        
+        cam_id = data.get('cam_id', '').strip()
+        name = data.get('name', '').strip()
+        source = data.get('source', '')
+        enabled = data.get('enabled', True)
+        
+        if not cam_id or not name or source == '':
+            return jsonify(success=False, message="Dados inválidos"), 400
+        
+        success, message = add_camera(cam_id, source, name, enabled)
+        return jsonify(success=success, message=message)
+    
+    @app.route('/api/cameras/remove/<cam_id>', methods=['DELETE'])
+    @login_required
+    def api_remove_camera(cam_id):
+        """
+        Remove uma câmera.
+        """
+        success, message = remove_camera(cam_id)
+        return jsonify(success=success, message=message)
+    
+    @app.route('/api/cameras/update/<cam_id>', methods=['PUT'])
+    @login_required
+    def api_update_camera(cam_id):
+        """
+        Atualiza informações de uma câmera.
+        """
+        data = request.get_json()
+        
+        source = data.get('source')
+        name = data.get('name')
+        enabled = data.get('enabled')
+        
+        success, message = update_camera(cam_id, source, name, enabled)
+        return jsonify(success=success, message=message)
+    
+    # ============================================================================
+    # API DE CONFIGURAÇÕES DO SISTEMA
+    # ============================================================================
+    
+    @app.route('/api/settings/get')
+    @login_required
+    def api_get_settings():
+        """
+        Retorna todas as configurações do sistema.
+        """
+        config = load_system_config()
+        return jsonify(config)
+    
+    @app.route('/api/settings/update', methods=['POST'])
+    @login_required
+    def api_update_settings():
+        """
+        Atualiza configurações do sistema.
+        """
+        data = request.get_json()
+        
+        section = data.get('section')
+        new_config = data.get('config')
+        
+        if not section or not new_config:
+            return jsonify(success=False, message="Dados inválidos"), 400
+        
+        # Carrega config atual
+        config = load_system_config()
+        
+        # Atualiza a seção específica
+        if section not in config:
+            config[section] = {}
+        
+        config[section].update(new_config)
+        
+        # Salva
+        if save_system_config(config):
+            return jsonify(success=True, message="Configurações atualizadas com sucesso!")
+        else:
+            return jsonify(success=False, message="Erro ao salvar configurações"), 500
 

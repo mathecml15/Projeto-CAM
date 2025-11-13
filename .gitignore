@@ -4,6 +4,10 @@
 # Arquivos de usuários (contém senhas hasheadas)
 users.json
 
+# Arquivos de configuração (específicos de cada instalação)
+cameras_config.json
+system_config.json
+
 # Banco de dados SQLite
 *.db
 *.sqlite

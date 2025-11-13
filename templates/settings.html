@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurações - Meu VMS</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333; }
+        
+        /* Navbar */
+        .navbar {
+            background-color: #0056b3;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .navbar h1 {
+            font-size: 24px;
+            margin: 0;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+        
+        .nav-links a.active {
+            background-color: rgba(255,255,255,0.3);
+            font-weight: bold;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .btn-logout {
+            padding: 8px 15px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-logout:hover {
+            background-color: #c82333;
+        }
+        
+        /* Container Principal */
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        /* Seções */
+        .section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .section h2 {
+            color: #0056b3;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .section h3 {
+            color: #555;
+            margin: 20px 0 15px 0;
+            font-size: 18px;
+        }
+        
+        /* Formulário */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #555;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            max-width: 400px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #0056b3;
+            box-shadow: 0 0 0 3px rgba(0,86,179,0.1);
+        }
+        
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #666;
+            font-size: 12px;
+        }
+        
+        /* Botões */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .btn-primary {
+            background-color: #0056b3;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #004494;
+        }
+        
+        /* Mensagens */
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        /* Divisor */
+        hr {
+            border: none;
+            border-top: 1px solid #e9ecef;
+            margin: 30px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <div class="navbar">
+        <h1>🎥 Meu VMS</h1>
+        <div class="nav-links">
+            <a href="/">Dashboard</a>
+            <a href="/cameras">Câmeras</a>
+            <a href="/settings" class="active">Configurações</a>
+        </div>
+        <div class="user-info">
+            <span>👤 {{ user if user else 'Usuário' }}</span>
+            <a href="/logout" class="btn-logout">Sair</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Mensagem de feedback -->
+        <div id="message-area"></div>
+        
+        <!-- Configurações de Detecção de Movimento -->
+        <div class="section">
+            <h2>🔍 Detecção de Movimento</h2>
+            <p style="margin-bottom: 20px; color: #666;">Configure a sensibilidade da detecção de movimento para todas as câmeras.</p>
+            
+            <form id="motion-settings-form">
+                <div class="form-group">
+                    <label for="motion-cooldown">Tempo de Espera (Cooldown)</label>
+                    <input type="number" id="motion-cooldown" name="cooldown" 
+                           min="1" max="60" step="0.5" value="5.0" required>
+                    <small>Tempo em segundos para parar de gravar após não detectar movimento (padrão: 5)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="min-contour-area">Área Mínima de Movimento</label>
+                    <input type="number" id="min-contour-area" name="min_contour_area" 
+                           min="100" max="10000" step="50" value="500" required>
+                    <small>Área mínima em pixels para considerar movimento (menor = mais sensível, padrão: 500)</small>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">💾 Salvar Configurações de Movimento</button>
+            </form>
+        </div>
+        
+        <!-- Configurações de Detecção de Objetos (IA) -->
+        <div class="section">
+            <h2>🤖 Detecção de Objetos (IA)</h2>
+            <p style="margin-bottom: 20px; color: #666;">Configure os parâmetros do sistema de detecção de objetos usando YOLO.</p>
+            
+            <form id="object-settings-form">
+                <div class="form-group">
+                    <label for="obj-model">Modelo YOLO</label>
+                    <select id="obj-model" name="model" required>
+                        <option value="models/yolov8n.pt">YOLOv8 Nano (mais rápido, recomendado para CPU)</option>
+                        <option value="models/yolov8s.pt">YOLOv8 Small (equilibrado)</option>
+                        <option value="models/yolov8m.pt">YOLOv8 Medium (mais preciso, requer GPU)</option>
+                        <option value="models/yolov8l.pt">YOLOv8 Large (muito preciso, requer GPU potente)</option>
+                    </select>
+                    <small>Escolha o modelo baseado no seu hardware (nano para CPU, outros para GPU)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="obj-confidence">Limiar de Confiança</label>
+                    <input type="number" id="obj-confidence" name="confidence_threshold" 
+                           min="0.1" max="1.0" step="0.05" value="0.5" required>
+                    <small>Confiança mínima para aceitar uma detecção (0.1 a 1.0, padrão: 0.5)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="obj-classes">Filtro de Classes (Opcional)</label>
+                    <input type="text" id="obj-classes" name="classes_filter" 
+                           placeholder="ex: person, car, dog">
+                    <small>Classes para detectar, separadas por vírgula. Deixe vazio para detectar todas as 80 classes COCO</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="auto-record-classes">Gravar Automaticamente ao Detectar (Opcional)</label>
+                    <input type="text" id="auto-record-classes" name="auto_record_on_objects" 
+                           placeholder="ex: person">
+                    <small>Classes que iniciam gravação automaticamente. Deixe vazio para desabilitar</small>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">💾 Salvar Configurações de IA</button>
+            </form>
+        </div>
+        
+        <!-- Configurações de Gravação -->
+        <div class="section">
+            <h2>💾 Gravação</h2>
+            <p style="margin-bottom: 20px; color: #666;">Configure onde os vídeos serão salvos.</p>
+            
+            <form id="recording-settings-form">
+                <div class="form-group">
+                    <label for="recording-folder">Pasta de Gravações</label>
+                    <input type="text" id="recording-folder" name="folder" 
+                           value="gravacoes" required>
+                    <small>Nome da pasta onde os vídeos serão salvos (padrão: gravacoes)</small>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">💾 Salvar Configurações de Gravação</button>
+            </form>
+        </div>
+        
+        <!-- Informações do Sistema -->
+        <div class="section">
+            <h2>ℹ️ Informações do Sistema</h2>
+            <div id="system-info">
+                <p style="color: #999;">Carregando informações...</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Carrega configurações ao carregar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+            loadSystemInfo();
+        });
+        
+        // Carrega as configurações atuais
+        async function loadSettings() {
+            try {
+                const response = await fetch('/api/settings/get');
+                const config = await response.json();
+                
+                // Detecção de Movimento
+                if (config.motion_detection) {
+                    document.getElementById('motion-cooldown').value = config.motion_detection.cooldown || 5.0;
+                    document.getElementById('min-contour-area').value = config.motion_detection.min_contour_area || 500;
+                }
+                
+                // Detecção de Objetos
+                if (config.object_detection) {
+                    document.getElementById('obj-model').value = config.object_detection.model || 'models/yolov8n.pt';
+                    document.getElementById('obj-confidence').value = config.object_detection.confidence_threshold || 0.5;
+                    
+                    if (config.object_detection.classes_filter) {
+                        document.getElementById('obj-classes').value = 
+                            Array.isArray(config.object_detection.classes_filter) ? 
+                            config.object_detection.classes_filter.join(', ') : '';
+                    }
+                    
+                    if (config.object_detection.auto_record_on_objects) {
+                        document.getElementById('auto-record-classes').value = 
+                            Array.isArray(config.object_detection.auto_record_on_objects) ? 
+                            config.object_detection.auto_record_on_objects.join(', ') : '';
+                    }
+                }
+                
+                // Gravação
+                if (config.recording) {
+                    document.getElementById('recording-folder').value = config.recording.folder || 'gravacoes';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar configurações:', error);
+            }
+        }
+        
+        // Salva configurações de movimento
+        document.getElementById('motion-settings-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const data = {
+                section: 'motion_detection',
+                config: {
+                    cooldown: parseFloat(document.getElementById('motion-cooldown').value),
+                    min_contour_area: parseInt(document.getElementById('min-contour-area').value)
+                }
+            };
+            
+            await saveSettings(data, 'Configurações de movimento atualizadas!');
+        });
+        
+        // Salva configurações de detecção de objetos
+        document.getElementById('object-settings-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const classesFilter = document.getElementById('obj-classes').value.trim();
+            const autoRecordClasses = document.getElementById('auto-record-classes').value.trim();
+            
+            const data = {
+                section: 'object_detection',
+                config: {
+                    model: document.getElementById('obj-model').value,
+                    confidence_threshold: parseFloat(document.getElementById('obj-confidence').value),
+                    classes_filter: classesFilter ? classesFilter.split(',').map(c => c.trim()) : null,
+                    auto_record_on_objects: autoRecordClasses ? autoRecordClasses.split(',').map(c => c.trim()) : null
+                }
+            };
+            
+            await saveSettings(data, 'Configurações de IA atualizadas!');
+        });
+        
+        // Salva configurações de gravação
+        document.getElementById('recording-settings-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const data = {
+                section: 'recording',
+                config: {
+                    folder: document.getElementById('recording-folder').value
+                }
+            };
+            
+            await saveSettings(data, 'Configurações de gravação atualizadas!');
+        });
+        
+        // Função genérica para salvar configurações
+        async function saveSettings(data, successMessage) {
+            try {
+                const response = await fetch('/api/settings/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(successMessage, 'success');
+                    setTimeout(() => {
+                        showMessage('⚠️ Algumas configurações podem exigir reinicialização do servidor.', 'info');
+                    }, 1500);
+                } else {
+                    showMessage(result.message || 'Erro ao salvar configurações', 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao salvar configurações: ' + error, 'error');
+            }
+        }
+        
+        // Carrega informações do sistema
+        async function loadSystemInfo() {
+            try {
+                const response = await fetch('/api/cameras/list');
+                const cameras = await response.json();
+                
+                const cameraCount = Object.keys(cameras).length;
+                const activeCameras = Object.values(cameras).filter(c => c.enabled).length;
+                
+                document.getElementById('system-info').innerHTML = `
+                    <p><strong>Total de Câmeras:</strong> ${cameraCount}</p>
+                    <p><strong>Câmeras Ativas:</strong> ${activeCameras}</p>
+                    <p><strong>Câmeras Desativadas:</strong> ${cameraCount - activeCameras}</p>
+                    <hr>
+                    <p style="color: #666; font-size: 14px;">
+                        💡 <strong>Dica:</strong> Após alterar configurações importantes, reinicie o servidor 
+                        para garantir que todas as mudanças sejam aplicadas.
+                    </p>
+                `;
+            } catch (error) {
+                console.error('Erro ao carregar informações do sistema:', error);
+            }
+        }
+        
+        // Mostra mensagem de feedback
+        function showMessage(message, type) {
+            const messageArea = document.getElementById('message-area');
+            const alertClass = type === 'success' ? 'alert-success' : 
+                             type === 'error' ? 'alert-error' : 'alert-info';
+            
+            messageArea.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+            
+            // Remove a mensagem após 5 segundos
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, 5000);
+            
+            // Scroll para o topo para ver a mensagem
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
+

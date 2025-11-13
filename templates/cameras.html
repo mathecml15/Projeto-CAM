@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Câmeras - Meu VMS</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333; }
+        
+        /* Navbar */
+        .navbar {
+            background-color: #0056b3;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .navbar h1 {
+            font-size: 24px;
+            margin: 0;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+        
+        .nav-links a.active {
+            background-color: rgba(255,255,255,0.3);
+            font-weight: bold;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .btn-logout {
+            padding: 8px 15px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-logout:hover {
+            background-color: #c82333;
+        }
+        
+        /* Container Principal */
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        /* Seções */
+        .section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .section h2 {
+            color: #0056b3;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        /* Formulário */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #555;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #0056b3;
+            box-shadow: 0 0 0 3px rgba(0,86,179,0.1);
+        }
+        
+        .form-group small {
+            display: block;
+            margin-top: 5px;
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        /* Botões */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        .btn-primary {
+            background-color: #0056b3;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #004494;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        
+        .btn-warning {
+            background-color: #ffc107;
+            color: #333;
+        }
+        
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+        
+        /* Lista de Câmeras */
+        .camera-list {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .camera-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #0056b3;
+        }
+        
+        .camera-item.disabled {
+            opacity: 0.6;
+            border-left-color: #6c757d;
+        }
+        
+        .camera-info {
+            flex: 1;
+        }
+        
+        .camera-info h3 {
+            margin: 0 0 5px 0;
+            color: #0056b3;
+            font-size: 18px;
+        }
+        
+        .camera-info p {
+            margin: 3px 0;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .camera-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .camera-actions .btn {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+        
+        /* Mensagens */
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .badge-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .badge-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <div class="navbar">
+        <h1>🎥 Meu VMS</h1>
+        <div class="nav-links">
+            <a href="/">Dashboard</a>
+            <a href="/cameras" class="active">Câmeras</a>
+            <a href="/settings">Configurações</a>
+        </div>
+        <div class="user-info">
+            <span>👤 {{ user if user else 'Usuário' }}</span>
+            <a href="/logout" class="btn-logout">Sair</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Mensagem de feedback -->
+        <div id="message-area"></div>
+        
+        <!-- Formulário para Adicionar Câmera -->
+        <div class="section">
+            <h2>➕ Adicionar Nova Câmera</h2>
+            <form id="add-camera-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="cam-id">ID da Câmera *</label>
+                        <input type="text" id="cam-id" name="cam_id" required 
+                               placeholder="ex: camera1, escritorio, corredor">
+                        <small>Identificador único (sem espaços, use letras e números)</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="cam-name">Nome da Câmera *</label>
+                        <input type="text" id="cam-name" name="cam_name" required 
+                               placeholder="ex: Câmera do Escritório">
+                        <small>Nome amigável para exibir na interface</small>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cam-source-type">Tipo de Câmera *</label>
+                    <select id="cam-source-type" name="cam_source_type" required>
+                        <option value="usb">Câmera USB/Webcam (local)</option>
+                        <option value="rtsp">Câmera IP (RTSP)</option>
+                        <option value="http">Câmera IP (HTTP/MJPEG)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="usb-source-group">
+                    <label for="cam-source-usb">Índice da Câmera USB *</label>
+                    <input type="number" id="cam-source-usb" name="cam_source_usb" min="0" value="0">
+                    <small>Geralmente 0 para a primeira webcam, 1 para a segunda, etc.</small>
+                </div>
+                
+                <div class="form-group" id="url-source-group" style="display: none;">
+                    <label for="cam-source-url">URL da Câmera *</label>
+                    <input type="text" id="cam-source-url" name="cam_source_url" 
+                           placeholder="ex: rtsp://usuario:senha@192.168.1.100:554/stream1">
+                    <small>URL completa da câmera IP (RTSP ou HTTP)</small>
+                </div>
+                
+                <button type="submit" class="btn btn-success">✓ Adicionar Câmera</button>
+            </form>
+        </div>
+        
+        <!-- Lista de Câmeras -->
+        <div class="section">
+            <h2>📹 Câmeras Configuradas</h2>
+            <div class="camera-list" id="camera-list">
+                <p style="text-align: center; color: #999;">Carregando câmeras...</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Alterna entre campo USB e URL baseado no tipo selecionado
+        document.getElementById('cam-source-type').addEventListener('change', function() {
+            const usbGroup = document.getElementById('usb-source-group');
+            const urlGroup = document.getElementById('url-source-group');
+            
+            if (this.value === 'usb') {
+                usbGroup.style.display = 'block';
+                urlGroup.style.display = 'none';
+                document.getElementById('cam-source-usb').required = true;
+                document.getElementById('cam-source-url').required = false;
+            } else {
+                usbGroup.style.display = 'none';
+                urlGroup.style.display = 'block';
+                document.getElementById('cam-source-usb').required = false;
+                document.getElementById('cam-source-url').required = true;
+            }
+        });
+        
+        // Carrega a lista de câmeras ao carregar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCameras();
+        });
+        
+        // Formulário de adicionar câmera
+        document.getElementById('add-camera-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const sourceType = formData.get('cam_source_type');
+            
+            let source;
+            if (sourceType === 'usb') {
+                source = formData.get('cam_source_usb');
+            } else {
+                source = formData.get('cam_source_url');
+            }
+            
+            const data = {
+                cam_id: formData.get('cam_id'),
+                name: formData.get('cam_name'),
+                source: source,
+                enabled: true
+            };
+            
+            try {
+                const response = await fetch('/api/cameras/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(result.message, 'success');
+                    this.reset();
+                    loadCameras();
+                    
+                    // Mensagem adicional sobre reinicialização
+                    setTimeout(() => {
+                        showMessage('⚠️ Reinicie o servidor para ativar a nova câmera.', 'info');
+                    }, 1500);
+                } else {
+                    showMessage(result.message, 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao adicionar câmera: ' + error, 'error');
+            }
+        });
+        
+        // Carrega a lista de câmeras
+        async function loadCameras() {
+            try {
+                const response = await fetch('/api/cameras/list');
+                const data = await response.json();
+                
+                const cameraList = document.getElementById('camera-list');
+                cameraList.innerHTML = '';
+                
+                if (Object.keys(data).length === 0) {
+                    cameraList.innerHTML = '<p style="text-align: center; color: #999;">Nenhuma câmera configurada ainda.</p>';
+                    return;
+                }
+                
+                for (const [camId, camData] of Object.entries(data)) {
+                    const item = createCameraItem(camId, camData);
+                    cameraList.appendChild(item);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar câmeras:', error);
+                document.getElementById('camera-list').innerHTML = 
+                    '<p style="text-align: center; color: #dc3545;">Erro ao carregar câmeras.</p>';
+            }
+        }
+        
+        // Cria um elemento de câmera
+        function createCameraItem(camId, camData) {
+            const div = document.createElement('div');
+            div.className = 'camera-item' + (camData.enabled ? '' : ' disabled');
+            
+            const statusBadge = camData.enabled ? 
+                '<span class="badge badge-success">Ativa</span>' : 
+                '<span class="badge badge-danger">Desativada</span>';
+            
+            div.innerHTML = `
+                <div class="camera-info">
+                    <h3>${camData.name || camId} ${statusBadge}</h3>
+                    <p><strong>ID:</strong> ${camId}</p>
+                    <p><strong>Fonte:</strong> ${camData.source}</p>
+                </div>
+                <div class="camera-actions">
+                    <button class="btn btn-warning" onclick="toggleCamera('${camId}', ${!camData.enabled})">
+                        ${camData.enabled ? 'Desativar' : 'Ativar'}
+                    </button>
+                    <button class="btn btn-danger" onclick="removeCamera('${camId}', '${camData.name}')">
+                        Remover
+                    </button>
+                </div>
+            `;
+            
+            return div;
+        }
+        
+        // Remove uma câmera
+        async function removeCamera(camId, camName) {
+            if (!confirm(`Tem certeza que deseja remover a câmera "${camName}"?\n\nEsta ação não pode ser desfeita.`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/cameras/remove/${camId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(result.message, 'success');
+                    loadCameras();
+                    setTimeout(() => {
+                        showMessage('⚠️ Reinicie o servidor para aplicar as mudanças.', 'info');
+                    }, 1500);
+                } else {
+                    showMessage(result.message, 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao remover câmera: ' + error, 'error');
+            }
+        }
+        
+        // Ativa/Desativa uma câmera
+        async function toggleCamera(camId, enabled) {
+            try {
+                const response = await fetch(`/api/cameras/update/${camId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled: enabled })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(result.message, 'success');
+                    loadCameras();
+                    setTimeout(() => {
+                        showMessage('⚠️ Reinicie o servidor para aplicar as mudanças.', 'info');
+                    }, 1500);
+                } else {
+                    showMessage(result.message, 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao atualizar câmera: ' + error, 'error');
+            }
+        }
+        
+        // Mostra mensagem de feedback
+        function showMessage(message, type) {
+            const messageArea = document.getElementById('message-area');
+            const alertClass = type === 'success' ? 'alert-success' : 
+                             type === 'error' ? 'alert-error' : 'alert-info';
+            
+            messageArea.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+            
+            // Remove a mensagem após 5 segundos
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, 5000);
+            
+            // Scroll para o topo para ver a mensagem
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
+
