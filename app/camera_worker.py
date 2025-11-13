@@ -13,6 +13,7 @@ Este arquivo contém a classe CameraWorker, que é responsável por:
 import cv2  # OpenCV - para trabalhar com vídeo e câmeras
 import time  # Para medir tempo (cooldown da detecção de movimento)
 import threading  # Para rodar cada câmera em paralelo (threads)
+import numpy as np  # Para criar arrays de imagens
 
 # Importa as configurações
 from app.config import (
@@ -28,6 +29,66 @@ try:
 except ImportError:
     OBJECT_DETECTION_AVAILABLE = False
     print("AVISO: Detecção de objetos não disponível. Instale ultralytics: pip install ultralytics")
+
+
+def create_no_camera_frame(cam_id, width=640, height=480):
+    """
+    Cria um frame informativo quando a câmera não está disponível.
+    
+    cam_id: ID da câmera
+    width: Largura do frame
+    height: Altura do frame
+    
+    Retorna: Frame (imagem numpy) com mensagem de erro
+    """
+    # Cria uma imagem preta
+    frame = np.zeros((height, width, 3), dtype=np.uint8)
+    
+    # Define cores
+    cor_fundo = (40, 40, 40)  # Cinza escuro
+    cor_texto = (255, 255, 255)  # Branco
+    cor_aviso = (0, 165, 255)  # Laranja
+    
+    # Preenche com cor de fundo
+    frame[:] = cor_fundo
+    
+    # Adiciona textos
+    fonte = cv2.FONT_HERSHEY_SIMPLEX
+    
+    # Título
+    texto1 = "Camera Nao Disponivel"
+    tamanho1 = cv2.getTextSize(texto1, fonte, 0.8, 2)[0]
+    x1 = (width - tamanho1[0]) // 2
+    cv2.putText(frame, texto1, (x1, height // 2 - 60), fonte, 0.8, cor_aviso, 2)
+    
+    # ID da câmera
+    texto2 = f"ID: {cam_id}"
+    tamanho2 = cv2.getTextSize(texto2, fonte, 0.6, 2)[0]
+    x2 = (width - tamanho2[0]) // 2
+    cv2.putText(frame, texto2, (x2, height // 2 - 10), fonte, 0.6, cor_texto, 2)
+    
+    # Instruções
+    texto3 = "Verifique:"
+    tamanho3 = cv2.getTextSize(texto3, fonte, 0.5, 1)[0]
+    x3 = (width - tamanho3[0]) // 2
+    cv2.putText(frame, texto3, (x3, height // 2 + 30), fonte, 0.5, cor_texto, 1)
+    
+    texto4 = "- Webcam conectada?"
+    tamanho4 = cv2.getTextSize(texto4, fonte, 0.4, 1)[0]
+    x4 = (width - tamanho4[0]) // 2
+    cv2.putText(frame, texto4, (x4, height // 2 + 55), fonte, 0.4, cor_texto, 1)
+    
+    texto5 = "- Outra aplicacao usando a camera?"
+    tamanho5 = cv2.getTextSize(texto5, fonte, 0.4, 1)[0]
+    x5 = (width - tamanho5[0]) // 2
+    cv2.putText(frame, texto5, (x5, height // 2 + 75), fonte, 0.4, cor_texto, 1)
+    
+    texto6 = "- Permissoes de acesso?"
+    tamanho6 = cv2.getTextSize(texto6, fonte, 0.4, 1)[0]
+    x6 = (width - tamanho6[0]) // 2
+    cv2.putText(frame, texto6, (x6, height // 2 + 95), fonte, 0.4, cor_texto, 1)
+    
+    return frame
 
 
 class CameraWorker(threading.Thread):
@@ -223,6 +284,10 @@ class CameraWorker(threading.Thread):
             # Verifica se a câmera ainda está aberta
             if not self.cap.isOpened():
                 print(f"({self.cam_id}): Câmera não está aberta. Tentando reconectar em 5s...")
+                # Cria um frame informativo para exibir ao usuário
+                error_frame = create_no_camera_frame(self.cam_id)
+                with self.frame_lock:
+                    self.output_frame = error_frame
                 time.sleep(5)  # Espera 5 segundos
                 # Tenta abrir a câmera novamente
                 self.cap = cv2.VideoCapture(self.source)
@@ -233,10 +298,15 @@ class CameraWorker(threading.Thread):
             # frame_original = a imagem capturada
             ret, frame_original = self.cap.read()
             
-            # Se não conseguiu ler o frame, espera e tenta novamente
+            # Se não conseguiu ler o frame, mostra mensagem de erro
             if not ret:
-                print(f"({self.cam_id}): Falha ao ler frame. Fim do stream?")
-                time.sleep(1)  # Espera 1 segundo
+                print(f"({self.cam_id}): Falha ao ler frame. Câmera não disponível.")
+                # Cria um frame informativo para exibir ao usuário
+                error_frame = create_no_camera_frame(self.cam_id)
+                # Salva este frame como output para o stream
+                with self.frame_lock:
+                    self.output_frame = error_frame
+                time.sleep(1)  # Espera 1 segundo antes de tentar novamente
                 continue  # Volta para o início do loop
             
             # Cria uma cópia do frame para processar (adicionar retângulos de detecção)

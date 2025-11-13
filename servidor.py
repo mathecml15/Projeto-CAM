@@ -56,7 +56,6 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True  # Protege contra XSS
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Protege contra CSRF
 
 # Registra todas as rotas no app
-from auth_routes import registrar_rotas_auth
 registrar_rotas_auth(app)  # Registra rotas de autenticação primeiro
 registrar_rotas(app)  # Registra rotas principais (protegidas)
 
