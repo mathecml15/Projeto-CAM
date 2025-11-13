@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Meu VMS</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333; }
+        
+        /* Navbar */
+        .navbar {
+            background-color: #0056b3;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .navbar h1 {
+            font-size: 24px;
+            margin: 0;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+        
+        .nav-links a.active {
+            background-color: rgba(255,255,255,0.3);
+            font-weight: bold;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .btn-logout {
+            padding: 8px 15px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-logout:hover {
+            background-color: #c82333;
+        }
+        
+        /* Container Principal */
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        /* Cards de Estatísticas */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #0056b3;
+        }
+        
+        .stat-card.success {
+            border-left-color: #28a745;
+        }
+        
+        .stat-card.warning {
+            border-left-color: #ffc107;
+        }
+        
+        .stat-card.danger {
+            border-left-color: #dc3545;
+        }
+        
+        .stat-card.info {
+            border-left-color: #17a2b8;
+        }
+        
+        .stat-card h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card .subtitle {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        /* Seções de Gráficos */
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-card {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .chart-card h2 {
+            color: #0056b3;
+            margin-bottom: 20px;
+            font-size: 18px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        /* Tabela de Câmeras */
+        .cameras-table {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .cameras-table h2 {
+            color: #0056b3;
+            margin-bottom: 20px;
+            font-size: 18px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        table th,
+        table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .badge-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .badge-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .badge-warning {
+            background-color: #ffc107;
+            color: #333;
+        }
+        
+        .badge-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+        
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .refresh-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+        
+        .refresh-btn:hover {
+            background-color: #004494;
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <div class="navbar">
+        <h1>🎥 Meu VMS</h1>
+        <div class="nav-links">
+            <a href="/dashboard" class="active">Dashboard</a>
+            <a href="/">Câmeras</a>
+            <a href="/cameras">Gerenciar</a>
+            <a href="/settings">Configurações</a>
+        </div>
+        <div class="user-info">
+            <span>👤 {{ user if user else 'Usuário' }}</span>
+            <a href="/logout" class="btn-logout">Sair</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Cards de Estatísticas Principais -->
+        <div class="stats-grid" id="stats-grid">
+            <div class="stat-card success">
+                <h3>Total de Gravações</h3>
+                <div class="value" id="stat-total-videos">-</div>
+                <div class="subtitle">Vídeos salvos</div>
+            </div>
+            
+            <div class="stat-card info">
+                <h3>Gravações Hoje</h3>
+                <div class="value" id="stat-videos-today">-</div>
+                <div class="subtitle">Últimas 24 horas</div>
+            </div>
+            
+            <div class="stat-card warning">
+                <h3>Espaço Usado</h3>
+                <div class="value" id="stat-disk-usage">-</div>
+                <div class="subtitle" id="stat-disk-subtitle">Em disco</div>
+            </div>
+            
+            <div class="stat-card danger">
+                <h3>Câmeras Ativas</h3>
+                <div class="value" id="stat-active-cameras">-</div>
+                <div class="subtitle" id="stat-total-cameras">de X câmeras</div>
+            </div>
+            
+            <div class="stat-card success">
+                <h3>Detecções de Objetos</h3>
+                <div class="value" id="stat-total-detections">-</div>
+                <div class="subtitle">Total detectado</div>
+            </div>
+            
+            <div class="stat-card info">
+                <h3>Gravações Esta Semana</h3>
+                <div class="value" id="stat-videos-week">-</div>
+                <div class="subtitle">Últimos 7 dias</div>
+            </div>
+        </div>
+        
+        <!-- Gráficos -->
+        <div class="charts-section">
+            <div class="chart-card">
+                <h2>📹 Gravações por Câmera</h2>
+                <div class="chart-container">
+                    <canvas id="chart-videos-by-camera"></canvas>
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <h2>📅 Gravações por Data</h2>
+                <div class="chart-container">
+                    <canvas id="chart-videos-by-date"></canvas>
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <h2>🎯 Detecções por Tipo de Objeto</h2>
+                <div class="chart-container">
+                    <canvas id="chart-detections-by-class"></canvas>
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <h2>📊 Detecções por Câmera</h2>
+                <div class="chart-container">
+                    <canvas id="chart-detections-by-camera"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tabela de Câmeras -->
+        <div class="cameras-table">
+            <h2>📹 Status das Câmeras</h2>
+            <table id="cameras-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>ID</th>
+                        <th>Status</th>
+                        <th>Gravando</th>
+                        <th>Detecção Movimento</th>
+                        <th>Detecção IA</th>
+                        <th>Detecções</th>
+                    </tr>
+                </thead>
+                <tbody id="cameras-table-body">
+                    <tr>
+                        <td colspan="7" class="loading">Carregando...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Botão de Atualizar -->
+    <button class="refresh-btn" onclick="loadAllStats()" title="Atualizar Estatísticas">🔄</button>
+    
+    <script>
+        // Variáveis globais para os gráficos
+        let chartVideosByCamera = null;
+        let chartVideosByDate = null;
+        let chartDetectionsByClass = null;
+        let chartDetectionsByCamera = null;
+        
+        // Carrega todas as estatísticas ao carregar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAllStats();
+            // Atualiza a cada 30 segundos
+            setInterval(loadAllStats, 30000);
+        });
+        
+        // Função principal para carregar todas as estatísticas
+        async function loadAllStats() {
+            try {
+                const response = await fetch('/api/stats/all');
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.error('Erro ao carregar estatísticas:', data.error);
+                    return;
+                }
+                
+                // Atualiza cards principais
+                updateMainCards(data);
+                
+                // Atualiza gráficos
+                updateCharts(data);
+                
+                // Atualiza tabela de câmeras
+                updateCamerasTable(data.cameras);
+                
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas:', error);
+            }
+        }
+        
+        // Atualiza os cards principais
+        function updateMainCards(data) {
+            // Total de gravações
+            document.getElementById('stat-total-videos').textContent = data.videos.total || 0;
+            
+            // Gravações hoje
+            document.getElementById('stat-videos-today').textContent = data.videos.today || 0;
+            
+            // Espaço usado
+            const gb = data.disk.used_gb || 0;
+            const mb = data.disk.used_mb || 0;
+            if (gb >= 1) {
+                document.getElementById('stat-disk-usage').textContent = gb.toFixed(2) + ' GB';
+            } else {
+                document.getElementById('stat-disk-usage').textContent = mb.toFixed(2) + ' MB';
+            }
+            
+            // Câmeras ativas
+            document.getElementById('stat-active-cameras').textContent = data.cameras.active_cameras || 0;
+            document.getElementById('stat-total-cameras').textContent = `de ${data.cameras.total_cameras || 0} câmeras`;
+            
+            // Total de detecções
+            document.getElementById('stat-total-detections').textContent = data.detections.total_detections || 0;
+            
+            // Gravações esta semana
+            document.getElementById('stat-videos-week').textContent = data.videos.this_week || 0;
+        }
+        
+        // Atualiza os gráficos
+        function updateCharts(data) {
+            // Gráfico: Gravações por Câmera
+            updateChartVideosByCamera(data.videos.by_camera);
+            
+            // Gráfico: Gravações por Data
+            updateChartVideosByDate(data.videos.by_date);
+            
+            // Gráfico: Detecções por Classe
+            updateChartDetectionsByClass(data.detections.detections_by_class);
+            
+            // Gráfico: Detecções por Câmera
+            updateChartDetectionsByCamera(data.detections.detections_by_camera);
+        }
+        
+        // Gráfico de gravações por câmera
+        function updateChartVideosByCamera(data) {
+            const ctx = document.getElementById('chart-videos-by-camera').getContext('2d');
+            
+            const labels = Object.keys(data || {});
+            const values = Object.values(data || {});
+            
+            if (chartVideosByCamera) {
+                chartVideosByCamera.destroy();
+            }
+            
+            chartVideosByCamera = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: [
+                            '#0056b3', '#28a745', '#ffc107', '#dc3545',
+                            '#17a2b8', '#6f42c1', '#fd7e14', '#20c997'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Gráfico de gravações por data
+        function updateChartVideosByDate(data) {
+            const ctx = document.getElementById('chart-videos-by-date').getContext('2d');
+            
+            // Ordena por data
+            const sortedEntries = Object.entries(data || {}).sort((a, b) => a[0].localeCompare(b[0]));
+            const labels = sortedEntries.map(([date]) => {
+                const d = new Date(date);
+                return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+            });
+            const values = sortedEntries.map(([, count]) => count);
+            
+            if (chartVideosByDate) {
+                chartVideosByDate.destroy();
+            }
+            
+            chartVideosByDate = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Gravações',
+                        data: values,
+                        borderColor: '#0056b3',
+                        backgroundColor: 'rgba(0, 86, 179, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Gráfico de detecções por classe
+        function updateChartDetectionsByClass(data) {
+            const ctx = document.getElementById('chart-detections-by-class').getContext('2d');
+            
+            // Pega os top 10
+            const sortedEntries = Object.entries(data || {})
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+            
+            const labels = sortedEntries.map(([name]) => name);
+            const values = sortedEntries.map(([, count]) => count);
+            
+            if (chartDetectionsByClass) {
+                chartDetectionsByClass.destroy();
+            }
+            
+            chartDetectionsByClass = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Detecções',
+                        data: values,
+                        backgroundColor: '#28a745'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Gráfico de detecções por câmera
+        function updateChartDetectionsByCamera(data) {
+            const ctx = document.getElementById('chart-detections-by-camera').getContext('2d');
+            
+            const labels = Object.keys(data || {});
+            const values = Object.values(data || {});
+            
+            if (chartDetectionsByCamera) {
+                chartDetectionsByCamera.destroy();
+            }
+            
+            chartDetectionsByCamera = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Detecções',
+                        data: values,
+                        backgroundColor: '#17a2b8'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Atualiza a tabela de câmeras
+        function updateCamerasTable(camerasData) {
+            const tbody = document.getElementById('cameras-table-body');
+            tbody.innerHTML = '';
+            
+            if (!camerasData.cameras_detail || camerasData.cameras_detail.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="loading">Nenhuma câmera configurada</td></tr>';
+                return;
+            }
+            
+            camerasData.cameras_detail.forEach(cam => {
+                const tr = document.createElement('tr');
+                
+                const statusBadge = cam.active ? 
+                    '<span class="badge badge-success">Ativa</span>' : 
+                    '<span class="badge badge-danger">Inativa</span>';
+                
+                const recordingBadge = cam.is_recording ? 
+                    '<span class="badge badge-danger">Sim</span>' : 
+                    '<span class="badge badge-success">Não</span>';
+                
+                const motionBadge = cam.motion_detection_enabled ? 
+                    '<span class="badge badge-success">Ativa</span>' : 
+                    '<span class="badge badge-warning">Inativa</span>';
+                
+                const objectBadge = cam.object_detection_enabled ? 
+                    '<span class="badge badge-info">Ativa</span>' : 
+                    '<span class="badge badge-warning">Inativa</span>';
+                
+                const detections = cam.detection_stats ? cam.detection_stats.total_detections : 0;
+                
+                tr.innerHTML = `
+                    <td>${cam.name}</td>
+                    <td>${cam.id}</td>
+                    <td>${statusBadge}</td>
+                    <td>${recordingBadge}</td>
+                    <td>${motionBadge}</td>
+                    <td>${objectBadge}</td>
+                    <td>${detections}</td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>
+

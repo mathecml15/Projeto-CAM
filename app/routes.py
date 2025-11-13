@@ -17,6 +17,7 @@ from app.camera_manager import (
     load_cameras_config, add_camera, remove_camera, update_camera,
     list_cameras, load_system_config, save_system_config
 )
+from app.stats import get_all_stats, get_video_stats, get_camera_stats, get_detection_stats
 import os
 
 
@@ -346,6 +347,15 @@ def registrar_rotas(app):
     # ROTAS DE PÁGINAS DE GERENCIAMENTO
     # ============================================================================
     
+    @app.route('/dashboard')
+    @login_required
+    def dashboard_page():
+        """
+        Página principal do dashboard com estatísticas.
+        """
+        user = get_current_user()
+        return render_template('dashboard.html', user=user)
+    
     @app.route('/cameras')
     @login_required
     def cameras_page():
@@ -461,4 +471,58 @@ def registrar_rotas(app):
             return jsonify(success=True, message="Configurações atualizadas com sucesso!")
         else:
             return jsonify(success=False, message="Erro ao salvar configurações"), 500
+    
+    # ============================================================================
+    # API DE ESTATÍSTICAS
+    # ============================================================================
+    
+    @app.route('/api/stats/all')
+    @login_required
+    def api_get_all_stats():
+        """
+        Retorna todas as estatísticas do sistema.
+        """
+        try:
+            stats = get_all_stats()
+            return jsonify(stats)
+        except Exception as e:
+            return jsonify(error=str(e)), 500
+    
+    @app.route('/api/stats/videos')
+    @login_required
+    def api_get_video_stats():
+        """
+        Retorna estatísticas de vídeos.
+        """
+        try:
+            system_config = load_system_config()
+            recording_folder = system_config.get('recording', {}).get('folder', 'gravacoes')
+            stats = get_video_stats(recording_folder)
+            return jsonify(stats)
+        except Exception as e:
+            return jsonify(error=str(e)), 500
+    
+    @app.route('/api/stats/cameras')
+    @login_required
+    def api_get_camera_stats():
+        """
+        Retorna estatísticas das câmeras.
+        """
+        try:
+            stats = get_camera_stats()
+            return jsonify(stats)
+        except Exception as e:
+            return jsonify(error=str(e)), 500
+    
+    @app.route('/api/stats/detections')
+    @login_required
+    def api_get_detection_stats():
+        """
+        Retorna estatísticas de detecções de objetos.
+        """
+        try:
+            stats = get_detection_stats()
+            return jsonify(stats)
+        except Exception as e:
+            return jsonify(error=str(e)), 500
 
