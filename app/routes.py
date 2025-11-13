@@ -22,6 +22,10 @@ from app.event_logger import (
     log_event, get_events, get_event_stats, clear_events,
     EventType, EventSeverity
 )
+from app.video_converter import (
+    convert_video, extract_frames, get_video_info,
+    SUPPORTED_FORMATS, check_ffmpeg
+)
 import os
 
 
@@ -627,4 +631,174 @@ def registrar_rotas(app):
             return jsonify(success=True, removed=removed, message=f"{removed} evento(s) removido(s)")
         except Exception as e:
             return jsonify(error=str(e)), 500
+    
+    # ============================================================================
+    # ROTAS DE EXPORTAÇÃO DE VÍDEOS
+    # ============================================================================
+    
+    @app.route('/export')
+    @login_required
+    def export_page():
+        """
+        Página para gerenciar exportações de vídeos.
+        """
+        user = get_current_user()
+        return render_template('export.html', user=user)
+    
+    @app.route('/api/export/convert', methods=['POST'])
+    @login_required
+    def api_convert_video():
+        """
+        Converte um vídeo para outro formato.
+        
+        Body JSON:
+        - filename: Nome do arquivo de vídeo
+        - format: Formato de saída ('mp4', 'avi', 'mov', 'webm')
+        - quality: Qualidade ('low', 'medium', 'high')
+        - fps: FPS de saída (opcional)
+        """
+        try:
+            data = request.get_json()
+            filename = data.get('filename')
+            format_type = data.get('format', 'mp4')
+            quality = data.get('quality', 'medium')
+            fps = data.get('fps')
+            
+            if not filename:
+                return jsonify(success=False, message="Nome do arquivo não fornecido"), 400
+            
+            # Caminhos
+            input_path = os.path.join(PASTA_GRAVACOES, filename)
+            
+            if not os.path.exists(input_path):
+                return jsonify(success=False, message="Arquivo não encontrado"), 404
+            
+            # Nome do arquivo de saída
+            base_name = os.path.splitext(filename)[0]
+            output_filename = f"{base_name}.{format_type}"
+            output_path = os.path.join(PASTA_GRAVACOES, output_filename)
+            
+            # Converte
+            success, message = convert_video(
+                input_path, output_path,
+                format_type=format_type,
+                quality=quality,
+                fps=fps
+            )
+            
+            if success:
+                # Registra evento
+                log_event(EventType.USER_ACTION, EventSeverity.INFO,
+                         message=f"Vídeo convertido: {filename} -> {output_filename}",
+                         details={'format': format_type, 'quality': quality},
+                         user=get_current_user())
+                
+                return jsonify(
+                    success=True,
+                    message=message,
+                    output_filename=output_filename
+                )
+            else:
+                return jsonify(success=False, message=message), 500
+        
+        except Exception as e:
+            return jsonify(success=False, message=f"Erro: {str(e)}"), 500
+    
+    @app.route('/api/export/extract-frames', methods=['POST'])
+    @login_required
+    def api_extract_frames():
+        """
+        Extrai frames de um vídeo.
+        
+        Body JSON:
+        - filename: Nome do arquivo de vídeo
+        - interval: Intervalo entre frames em segundos (padrão: 1.0)
+        - format: Formato dos frames ('jpg', 'png') (padrão: 'jpg')
+        - max_frames: Número máximo de frames (opcional)
+        """
+        try:
+            data = request.get_json()
+            filename = data.get('filename')
+            interval = float(data.get('interval', 1.0))
+            frame_format = data.get('format', 'jpg')
+            max_frames = data.get('max_frames')
+            
+            if not filename:
+                return jsonify(success=False, message="Nome do arquivo não fornecido"), 400
+            
+            # Caminhos
+            video_path = os.path.join(PASTA_GRAVACOES, filename)
+            
+            if not os.path.exists(video_path):
+                return jsonify(success=False, message="Arquivo não encontrado"), 404
+            
+            # Pasta de saída
+            base_name = os.path.splitext(filename)[0]
+            output_folder = os.path.join(PASTA_GRAVACOES, f"{base_name}_frames")
+            
+            # Extrai frames
+            success, message, count = extract_frames(
+                video_path, output_folder,
+                interval=interval,
+                format=frame_format,
+                max_frames=max_frames
+            )
+            
+            if success:
+                # Registra evento
+                log_event(EventType.USER_ACTION, EventSeverity.INFO,
+                         message=f"Frames extraídos: {filename} ({count} frames)",
+                         details={'interval': interval, 'format': frame_format},
+                         user=get_current_user())
+                
+                return jsonify(
+                    success=True,
+                    message=message,
+                    frames_count=count,
+                    output_folder=output_folder
+                )
+            else:
+                return jsonify(success=False, message=message), 500
+        
+        except Exception as e:
+            return jsonify(success=False, message=f"Erro: {str(e)}"), 500
+    
+    @app.route('/api/export/video-info/<filename>')
+    @login_required
+    def api_get_video_info(filename):
+        """
+        Obtém informações sobre um vídeo.
+        """
+        try:
+            video_path = os.path.join(PASTA_GRAVACOES, filename)
+            info = get_video_info(video_path)
+            
+            if 'error' in info:
+                return jsonify(error=info['error']), 404
+            
+            return jsonify(info)
+        except Exception as e:
+            return jsonify(error=str(e)), 500
+    
+    @app.route('/api/export/formats')
+    @login_required
+    def api_get_formats():
+        """
+        Retorna os formatos suportados.
+        """
+        return jsonify({
+            'formats': SUPPORTED_FORMATS,
+            'ffmpeg_available': check_ffmpeg()
+        })
+    
+    @app.route('/download/<filename>')
+    @login_required
+    def download_file(filename):
+        """
+        Faz download de um arquivo da pasta de gravações.
+        """
+        try:
+            return send_from_directory(PASTA_GRAVACOES, filename, as_attachment=True)
+        except Exception as e:
+            return jsonify(error=str(e)), 404
 

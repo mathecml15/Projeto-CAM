@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exportar Vídeos - Meu VMS</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333; }
+        
+        /* Navbar */
+        .navbar {
+            background-color: #0056b3;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .navbar h1 {
+            font-size: 24px;
+            margin: 0;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+        
+        .nav-links a.active {
+            background-color: rgba(255,255,255,0.3);
+            font-weight: bold;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .btn-logout {
+            padding: 8px 15px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-logout:hover {
+            background-color: #c82333;
+        }
+        
+        /* Container Principal */
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        /* Seções */
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .section h2 {
+            color: #0056b3;
+            margin-bottom: 20px;
+            font-size: 18px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        
+        /* Lista de Vídeos */
+        .video-list {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .video-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #0056b3;
+        }
+        
+        .video-info {
+            flex: 1;
+        }
+        
+        .video-info h3 {
+            margin: 0 0 5px 0;
+            color: #0056b3;
+            font-size: 16px;
+        }
+        
+        .video-info p {
+            margin: 3px 0;
+            color: #666;
+            font-size: 13px;
+        }
+        
+        .video-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* Formulários */
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+            font-size: 14px;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        /* Botões */
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: #0056b3;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #004494;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        
+        .btn-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background-color: #138496;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 50px auto;
+            padding: 25px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h3 {
+            color: #0056b3;
+            margin: 0;
+        }
+        
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        /* Mensagens */
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+        }
+        
+        .video-info-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .info-item {
+            text-align: center;
+        }
+        
+        .info-item strong {
+            display: block;
+            color: #0056b3;
+            font-size: 18px;
+        }
+        
+        .info-item span {
+            display: block;
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <div class="navbar">
+        <h1>🎥 Meu VMS</h1>
+        <div class="nav-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/">Câmeras</a>
+            <a href="/cameras">Gerenciar</a>
+            <a href="/settings">Configurações</a>
+            <a href="/events">Eventos</a>
+            <a href="/export" class="active">Exportar</a>
+        </div>
+        <div class="user-info">
+            <span>👤 {{ user if user else 'Usuário' }}</span>
+            <a href="/logout" class="btn-logout">Sair</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Mensagem de feedback -->
+        <div id="message-area"></div>
+        
+        <!-- Lista de Vídeos -->
+        <div class="section">
+            <h2>📹 Vídeos Disponíveis</h2>
+            <div class="video-list" id="video-list">
+                <div class="loading">Carregando vídeos...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Conversão -->
+    <div id="convert-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔄 Converter Vídeo</h3>
+                <span class="close" onclick="closeModal('convert-modal')">&times;</span>
+            </div>
+            <div id="convert-form">
+                <div class="form-group">
+                    <label>Arquivo:</label>
+                    <input type="text" id="convert-filename" readonly>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Formato de Saída *</label>
+                        <select id="convert-format" required>
+                            <option value="mp4">MP4</option>
+                            <option value="avi">AVI</option>
+                            <option value="mov">MOV</option>
+                            <option value="webm">WebM</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Qualidade *</label>
+                        <select id="convert-quality" required>
+                            <option value="low">Baixa (arquivo menor)</option>
+                            <option value="medium" selected>Média (recomendado)</option>
+                            <option value="high">Alta (melhor qualidade)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>FPS (opcional - deixe vazio para manter original)</label>
+                    <input type="number" id="convert-fps" min="1" max="60" placeholder="Ex: 30">
+                </div>
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="executeConvert()">🔄 Converter</button>
+                    <button class="btn btn-secondary" onclick="closeModal('convert-modal')">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Extração de Frames -->
+    <div id="extract-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🖼️ Extrair Frames</h3>
+                <span class="close" onclick="closeModal('extract-modal')">&times;</span>
+            </div>
+            <div id="extract-form">
+                <div class="form-group">
+                    <label>Arquivo:</label>
+                    <input type="text" id="extract-filename" readonly>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Intervalo (segundos) *</label>
+                        <input type="number" id="extract-interval" value="1.0" min="0.1" step="0.1" required>
+                        <small style="color: #666; font-size: 12px;">1.0 = 1 frame por segundo</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Formato *</label>
+                        <select id="extract-format" required>
+                            <option value="jpg" selected>JPG (menor tamanho)</option>
+                            <option value="png">PNG (melhor qualidade)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Máximo de Frames (opcional - deixe vazio para todos)</label>
+                    <input type="number" id="extract-max-frames" min="1" placeholder="Ex: 100">
+                </div>
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button class="btn btn-success" onclick="executeExtract()">🖼️ Extrair Frames</button>
+                    <button class="btn btn-secondary" onclick="closeModal('extract-modal')">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Informações -->
+    <div id="info-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>ℹ️ Informações do Vídeo</h3>
+                <span class="close" onclick="closeModal('info-modal')">&times;</span>
+            </div>
+            <div id="video-info-content">
+                <div class="loading">Carregando informações...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentVideo = null;
+        
+        // Carrega vídeos ao carregar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            loadVideos();
+        });
+        
+        // Carrega lista de vídeos
+        async function loadVideos() {
+            try {
+                const response = await fetch('/list_videos');
+                const data = await response.json();
+                
+                const videoList = document.getElementById('video-list');
+                videoList.innerHTML = '';
+                
+                if (data.videos.length === 0) {
+                    videoList.innerHTML = '<div class="loading">Nenhum vídeo encontrado.</div>';
+                    return;
+                }
+                
+                data.videos.forEach(filename => {
+                    const item = createVideoItem(filename);
+                    videoList.appendChild(item);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar vídeos:', error);
+                document.getElementById('video-list').innerHTML = 
+                    '<div class="loading">Erro ao carregar vídeos.</div>';
+            }
+        }
+        
+        // Cria item de vídeo
+        function createVideoItem(filename) {
+            const div = document.createElement('div');
+            div.className = 'video-item';
+            
+            const size = formatFileSize(filename);
+            const date = extractDateFromFilename(filename);
+            
+            div.innerHTML = `
+                <div class="video-info">
+                    <h3>${filename}</h3>
+                    <p>📅 ${date}</p>
+                    <p>💾 ${size}</p>
+                </div>
+                <div class="video-actions">
+                    <button class="btn btn-info" onclick="showVideoInfo('${filename}')">ℹ️ Info</button>
+                    <button class="btn btn-primary" onclick="openConvertModal('${filename}')">🔄 Converter</button>
+                    <button class="btn btn-success" onclick="openExtractModal('${filename}')">🖼️ Frames</button>
+                    <button class="btn btn-primary" onclick="downloadVideo('${filename}')">⬇️ Download</button>
+                </div>
+            `;
+            
+            return div;
+        }
+        
+        // Abre modal de conversão
+        function openConvertModal(filename) {
+            currentVideo = filename;
+            document.getElementById('convert-filename').value = filename;
+            document.getElementById('convert-modal').style.display = 'block';
+        }
+        
+        // Abre modal de extração
+        function openExtractModal(filename) {
+            currentVideo = filename;
+            document.getElementById('extract-filename').value = filename;
+            document.getElementById('extract-modal').style.display = 'block';
+        }
+        
+        // Executa conversão
+        async function executeConvert() {
+            const filename = currentVideo;
+            const format = document.getElementById('convert-format').value;
+            const quality = document.getElementById('convert-quality').value;
+            const fps = document.getElementById('convert-fps').value || null;
+            
+            showMessage('Convertendo vídeo... Isso pode levar alguns minutos.', 'info');
+            closeModal('convert-modal');
+            
+            try {
+                const response = await fetch('/api/export/convert', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename, format, quality, fps: fps ? parseFloat(fps) : null })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage(`✅ ${data.message} Arquivo: ${data.output_filename}`, 'success');
+                    loadVideos();
+                } else {
+                    showMessage(`❌ Erro: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Erro ao converter: ${error}`, 'error');
+            }
+        }
+        
+        // Executa extração de frames
+        async function executeExtract() {
+            const filename = currentVideo;
+            const interval = parseFloat(document.getElementById('extract-interval').value);
+            const format = document.getElementById('extract-format').value;
+            const maxFrames = document.getElementById('extract-max-frames').value || null;
+            
+            showMessage('Extraindo frames... Isso pode levar alguns minutos.', 'info');
+            closeModal('extract-modal');
+            
+            try {
+                const response = await fetch('/api/export/extract-frames', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        filename, 
+                        interval, 
+                        format, 
+                        max_frames: maxFrames ? parseInt(maxFrames) : null 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage(`✅ ${data.message}`, 'success');
+                } else {
+                    showMessage(`❌ Erro: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Erro ao extrair frames: ${error}`, 'error');
+            }
+        }
+        
+        // Mostra informações do vídeo
+        async function showVideoInfo(filename) {
+            const modal = document.getElementById('info-modal');
+            const content = document.getElementById('video-info-content');
+            content.innerHTML = '<div class="loading">Carregando informações...</div>';
+            modal.style.display = 'block';
+            
+            try {
+                const response = await fetch(`/api/export/video-info/${encodeURIComponent(filename)}`);
+                const info = await response.json();
+                
+                if (info.error) {
+                    content.innerHTML = `<div class="alert alert-error">${info.error}</div>`;
+                    return;
+                }
+                
+                const duration = formatDuration(info.duration);
+                const size = formatBytes(info.size);
+                
+                content.innerHTML = `
+                    <h3 style="margin-bottom: 15px;">${filename}</h3>
+                    <div class="video-info-details">
+                        <div class="info-item">
+                            <strong>${info.width}</strong>
+                            <span>Largura (px)</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>${info.height}</strong>
+                            <span>Altura (px)</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>${info.fps.toFixed(2)}</strong>
+                            <span>FPS</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>${duration}</strong>
+                            <span>Duração</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>${info.frame_count}</strong>
+                            <span>Frames</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>${size}</strong>
+                            <span>Tamanho</span>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                content.innerHTML = `<div class="alert alert-error">Erro ao carregar informações: ${error}</div>`;
+            }
+        }
+        
+        // Download de vídeo
+        function downloadVideo(filename) {
+            window.location.href = `/download/${encodeURIComponent(filename)}`;
+        }
+        
+        // Fecha modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        // Fecha modal ao clicar fora
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+        
+        // Mostra mensagem
+        function showMessage(message, type) {
+            const messageArea = document.getElementById('message-area');
+            const alertClass = type === 'success' ? 'alert-success' : 
+                             type === 'error' ? 'alert-error' : 'alert-info';
+            
+            messageArea.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+            
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, 5000);
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // Funções auxiliares
+        function formatFileSize(filename) {
+            // Tenta obter tamanho do arquivo (seria necessário uma API para isso)
+            return 'Tamanho desconhecido';
+        }
+        
+        function extractDateFromFilename(filename) {
+            // Extrai data do nome do arquivo (formato: cam_id-gravacao-DD-MM-YYYY_HHMMSS.webm)
+            const match = filename.match(/(\d{2}-\d{2}-\d{4}_\d{6})/);
+            if (match) {
+                return match[1].replace('_', ' ');
+            }
+            return 'Data desconhecida';
+        }
+        
+        function formatDuration(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+            
+            if (hours > 0) {
+                return `${hours}h ${minutes}m ${secs}s`;
+            } else if (minutes > 0) {
+                return `${minutes}m ${secs}s`;
+            } else {
+                return `${secs}s`;
+            }
+        }
+        
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+    </script>
+</body>
+</html>
+
