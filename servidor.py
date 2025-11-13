@@ -31,13 +31,14 @@ from flask import Flask  # Flask - cria o servidor web
 import os  # Para criar pastas
 
 # Importa as configurações
-from config import CAMERA_SOURCES, PASTA_GRAVACOES, g_cameras
+from app.config import CAMERA_SOURCES, PASTA_GRAVACOES, g_cameras
 
 # Importa a classe CameraWorker
-from camera_worker import CameraWorker
+from app.camera_worker import CameraWorker
 
 # Importa a função para registrar as rotas
-from routes import registrar_rotas
+from app.routes import registrar_rotas
+from app.auth_routes import registrar_rotas_auth
 
 # ============================================================================
 # CRIAÇÃO DO APP FLASK
@@ -70,7 +71,7 @@ def main():
     """
     # Inicializa o banco de dados (se estiver usando)
     try:
-        from database import init_database
+        from app.database import init_database
         init_database()
         print("Banco de dados inicializado.")
     except ImportError:
