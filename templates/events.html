@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico de Eventos - Meu VMS</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333; }
+        
+        /* Navbar */
+        .navbar {
+            background-color: #0056b3;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .navbar h1 {
+            font-size: 24px;
+            margin: 0;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+        
+        .nav-links a.active {
+            background-color: rgba(255,255,255,0.3);
+            font-weight: bold;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .btn-logout {
+            padding: 8px 15px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-logout:hover {
+            background-color: #c82333;
+        }
+        
+        /* Container Principal */
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        /* Filtros */
+        .filters-section {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .filters-section h2 {
+            color: #0056b3;
+            margin-bottom: 20px;
+            font-size: 18px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .filter-group label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+            font-size: 14px;
+        }
+        
+        .filter-group input,
+        .filter-group select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: #0056b3;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #004494;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        
+        /* Tabela de Eventos */
+        .events-section {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .events-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .events-header h2 {
+            color: #0056b3;
+            font-size: 18px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+            flex: 1;
+        }
+        
+        .events-count {
+            color: #666;
+            font-size: 14px;
+            margin-left: 20px;
+        }
+        
+        .events-table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        table th,
+        table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #555;
+            position: sticky;
+            top: 0;
+        }
+        
+        table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .badge-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+        
+        .badge-warning {
+            background-color: #ffc107;
+            color: #333;
+        }
+        
+        .badge-error {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .badge-critical {
+            background-color: #721c24;
+            color: white;
+        }
+        
+        .badge-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .event-type {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        
+        .event-message {
+            max-width: 400px;
+            word-wrap: break-word;
+        }
+        
+        .event-details {
+            font-size: 12px;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .no-events {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <div class="navbar">
+        <h1>🎥 Meu VMS</h1>
+        <div class="nav-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/">Câmeras</a>
+            <a href="/cameras">Gerenciar</a>
+            <a href="/settings">Configurações</a>
+            <a href="/events" class="active">Eventos</a>
+        </div>
+        <div class="user-info">
+            <span>👤 {{ user if user else 'Usuário' }}</span>
+            <a href="/logout" class="btn-logout">Sair</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Filtros -->
+        <div class="filters-section">
+            <h2>🔍 Filtros</h2>
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label>Tipo de Evento</label>
+                    <select id="filter-type">
+                        <option value="">Todos</option>
+                        <option value="recording_started">Gravação Iniciada</option>
+                        <option value="recording_stopped">Gravação Parada</option>
+                        <option value="motion_detected">Movimento Detectado</option>
+                        <option value="object_detected">Objeto Detectado</option>
+                        <option value="user_action">Ação do Usuário</option>
+                        <option value="system_error">Erro do Sistema</option>
+                        <option value="system_info">Info do Sistema</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Severidade</label>
+                    <select id="filter-severity">
+                        <option value="">Todas</option>
+                        <option value="info">Info</option>
+                        <option value="warning">Aviso</option>
+                        <option value="error">Erro</option>
+                        <option value="critical">Crítico</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Câmera</label>
+                    <select id="filter-camera">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Buscar</label>
+                    <input type="text" id="filter-search" placeholder="Buscar na mensagem...">
+                </div>
+                
+                <div class="filter-group">
+                    <label>Data Inicial</label>
+                    <input type="datetime-local" id="filter-start-date">
+                </div>
+                
+                <div class="filter-group">
+                    <label>Data Final</label>
+                    <input type="datetime-local" id="filter-end-date">
+                </div>
+            </div>
+            
+            <div class="filter-actions">
+                <button class="btn btn-primary" onclick="loadEvents()">🔍 Filtrar</button>
+                <button class="btn btn-secondary" onclick="clearFilters()">🔄 Limpar</button>
+                <button class="btn btn-danger" onclick="clearEvents()">🗑️ Limpar Log</button>
+            </div>
+        </div>
+        
+        <!-- Tabela de Eventos -->
+        <div class="events-section">
+            <div class="events-header">
+                <h2>📝 Histórico de Eventos</h2>
+                <span class="events-count" id="events-count">Carregando...</span>
+            </div>
+            
+            <div class="events-table-container">
+                <table id="events-table">
+                    <thead>
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Tipo</th>
+                            <th>Severidade</th>
+                            <th>Câmera</th>
+                            <th>Mensagem</th>
+                            <th>Usuário</th>
+                        </tr>
+                    </thead>
+                    <tbody id="events-table-body">
+                        <tr>
+                            <td colspan="6" class="loading">Carregando eventos...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Carrega eventos ao carregar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCameras();
+            loadEvents();
+            // Atualiza a cada 10 segundos
+            setInterval(loadEvents, 10000);
+        });
+        
+        // Carrega lista de câmeras para o filtro
+        async function loadCameras() {
+            try {
+                const response = await fetch('/api/cameras/list');
+                const cameras = await response.json();
+                
+                const select = document.getElementById('filter-camera');
+                Object.keys(cameras).forEach(camId => {
+                    const option = document.createElement('option');
+                    option.value = camId;
+                    option.textContent = cameras[camId].name || camId;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar câmeras:', error);
+            }
+        }
+        
+        // Carrega eventos
+        async function loadEvents() {
+            const tbody = document.getElementById('events-table-body');
+            tbody.innerHTML = '<tr><td colspan="6" class="loading">Carregando eventos...</td></tr>';
+            
+            try {
+                // Monta query string com filtros
+                const params = new URLSearchParams();
+                
+                const type = document.getElementById('filter-type').value;
+                const severity = document.getElementById('filter-severity').value;
+                const camera = document.getElementById('filter-camera').value;
+                const search = document.getElementById('filter-search').value;
+                const startDate = document.getElementById('filter-start-date').value;
+                const endDate = document.getElementById('filter-end-date').value;
+                
+                if (type) params.append('type', type);
+                if (severity) params.append('severity', severity);
+                if (camera) params.append('camera_id', camera);
+                if (search) params.append('search', search);
+                if (startDate) params.append('start_date', new Date(startDate).toISOString());
+                if (endDate) params.append('end_date', new Date(endDate).toISOString());
+                
+                params.append('limit', '500');
+                
+                const response = await fetch(`/api/events?${params.toString()}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="loading">Erro: ${data.error}</td></tr>`;
+                    return;
+                }
+                
+                const events = data.events || [];
+                document.getElementById('events-count').textContent = `${events.length} evento(s) encontrado(s)`;
+                
+                if (events.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="no-events">Nenhum evento encontrado</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = '';
+                
+                events.forEach(event => {
+                    const tr = document.createElement('tr');
+                    
+                    const timestamp = new Date(event.timestamp);
+                    const dateStr = timestamp.toLocaleString('pt-BR');
+                    
+                    const severityBadge = getSeverityBadge(event.severity);
+                    const typeLabel = getTypeLabel(event.type);
+                    
+                    tr.innerHTML = `
+                        <td>${dateStr}</td>
+                        <td><span class="event-type">${typeLabel}</span></td>
+                        <td>${severityBadge}</td>
+                        <td>${event.camera_id || '-'}</td>
+                        <td class="event-message">${event.message || '-'}</td>
+                        <td>${event.user || '-'}</td>
+                    `;
+                    
+                    tbody.appendChild(tr);
+                });
+                
+            } catch (error) {
+                console.error('Erro ao carregar eventos:', error);
+                tbody.innerHTML = '<tr><td colspan="6" class="loading">Erro ao carregar eventos</td></tr>';
+            }
+        }
+        
+        // Retorna badge de severidade
+        function getSeverityBadge(severity) {
+            const badges = {
+                'info': '<span class="badge badge-info">Info</span>',
+                'warning': '<span class="badge badge-warning">Aviso</span>',
+                'error': '<span class="badge badge-error">Erro</span>',
+                'critical': '<span class="badge badge-critical">Crítico</span>'
+            };
+            return badges[severity] || '<span class="badge badge-info">Info</span>';
+        }
+        
+        // Retorna label do tipo de evento
+        function getTypeLabel(type) {
+            const labels = {
+                'recording_started': 'Gravação Iniciada',
+                'recording_stopped': 'Gravação Parada',
+                'motion_detected': 'Movimento Detectado',
+                'object_detected': 'Objeto Detectado',
+                'camera_connected': 'Câmera Conectada',
+                'camera_disconnected': 'Câmera Desconectada',
+                'user_login': 'Login',
+                'user_logout': 'Logout',
+                'user_action': 'Ação do Usuário',
+                'system_error': 'Erro do Sistema',
+                'system_info': 'Info do Sistema',
+                'config_changed': 'Config Alterada'
+            };
+            return labels[type] || type;
+        }
+        
+        // Limpa filtros
+        function clearFilters() {
+            document.getElementById('filter-type').value = '';
+            document.getElementById('filter-severity').value = '';
+            document.getElementById('filter-camera').value = '';
+            document.getElementById('filter-search').value = '';
+            document.getElementById('filter-start-date').value = '';
+            document.getElementById('filter-end-date').value = '';
+            loadEvents();
+        }
+        
+        // Limpa eventos
+        async function clearEvents() {
+            if (!confirm('Tem certeza que deseja limpar todos os eventos? Esta ação não pode ser desfeita.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/events/clear', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(data.message);
+                    loadEvents();
+                } else {
+                    alert('Erro ao limpar eventos: ' + (data.error || 'Erro desconhecido'));
+                }
+            } catch (error) {
+                alert('Erro ao limpar eventos: ' + error);
+            }
+        }
+    </script>
+</body>
+</html>
+

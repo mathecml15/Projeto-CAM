@@ -18,6 +18,10 @@ from app.camera_manager import (
     list_cameras, load_system_config, save_system_config
 )
 from app.stats import get_all_stats, get_video_stats, get_camera_stats, get_detection_stats
+from app.event_logger import (
+    log_event, get_events, get_event_stats, clear_events,
+    EventType, EventSeverity
+)
 import os
 
 
@@ -131,6 +135,8 @@ def registrar_rotas(app):
         
         Retorna: JSON com status da operação
         """
+        user = get_current_user()
+        
         # Verifica se a câmera existe
         if cam_id not in g_cameras:
             return jsonify(status="Erro: Câmera não encontrada"), 404
@@ -141,6 +147,12 @@ def registrar_rotas(app):
         # Inicia a gravação (protegido pelo lock)
         with worker.state_lock:
             worker.start_recording_logic()
+        
+        # Registra ação do usuário
+        log_event(EventType.USER_ACTION, EventSeverity.INFO,
+                 camera_id=cam_id,
+                 message=f"Usuário iniciou gravação manual",
+                 user=user)
         
         return jsonify(status=f"Gravando ({cam_id})...")
     
@@ -155,6 +167,8 @@ def registrar_rotas(app):
         
         Retorna: JSON com status da operação
         """
+        user = get_current_user()
+        
         # Verifica se a câmera existe
         if cam_id not in g_cameras:
             return jsonify(status="Erro: Câmera não encontrada"), 404
@@ -165,6 +179,12 @@ def registrar_rotas(app):
         # Para a gravação (protegido pelo lock)
         with worker.state_lock:
             worker.stop_recording_logic()
+        
+        # Registra ação do usuário
+        log_event(EventType.USER_ACTION, EventSeverity.INFO,
+                 camera_id=cam_id,
+                 message=f"Usuário parou gravação manual",
+                 user=user)
         
         return jsonify(status=f"Ocioso ({cam_id})")
     
@@ -523,6 +543,88 @@ def registrar_rotas(app):
         try:
             stats = get_detection_stats()
             return jsonify(stats)
+        except Exception as e:
+            return jsonify(error=str(e)), 500
+    
+    # ============================================================================
+    # ROTAS DE EVENTOS/LOGS
+    # ============================================================================
+    
+    @app.route('/events')
+    @login_required
+    def events_page():
+        """
+        Página para visualizar histórico de eventos/logs.
+        """
+        user = get_current_user()
+        return render_template('events.html', user=user)
+    
+    @app.route('/api/events')
+    @login_required
+    def api_get_events():
+        """
+        Retorna eventos do log com filtros opcionais.
+        
+        Query parameters:
+        - limit: Número máximo de eventos (padrão: 100)
+        - type: Filtrar por tipo de evento
+        - severity: Filtrar por severidade
+        - camera_id: Filtrar por ID da câmera
+        - start_date: Data inicial (ISO format)
+        - end_date: Data final (ISO format)
+        - search: Buscar texto na mensagem
+        """
+        try:
+            limit = request.args.get('limit', 100, type=int)
+            event_type = request.args.get('type')
+            severity = request.args.get('severity')
+            camera_id = request.args.get('camera_id')
+            start_date = request.args.get('start_date')
+            end_date = request.args.get('end_date')
+            search = request.args.get('search')
+            
+            events = get_events(
+                limit=limit,
+                event_type=event_type,
+                severity=severity,
+                camera_id=camera_id,
+                start_date=start_date,
+                end_date=end_date,
+                search=search
+            )
+            
+            return jsonify(events=events, count=len(events))
+        except Exception as e:
+            return jsonify(error=str(e)), 500
+    
+    @app.route('/api/events/stats')
+    @login_required
+    def api_get_event_stats():
+        """
+        Retorna estatísticas dos eventos.
+        """
+        try:
+            stats = get_event_stats()
+            return jsonify(stats)
+        except Exception as e:
+            return jsonify(error=str(e)), 500
+    
+    @app.route('/api/events/clear', methods=['POST'])
+    @login_required
+    def api_clear_events():
+        """
+        Limpa eventos do log.
+        
+        Body JSON opcional:
+        - older_than_days: Remove apenas eventos mais antigos que X dias
+        """
+        try:
+            data = request.get_json() or {}
+            older_than_days = data.get('older_than_days')
+            
+            removed = clear_events(older_than_days=older_than_days)
+            
+            return jsonify(success=True, removed=removed, message=f"{removed} evento(s) removido(s)")
         except Exception as e:
             return jsonify(error=str(e)), 500
 

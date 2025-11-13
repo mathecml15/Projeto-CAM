@@ -30,6 +30,14 @@ except ImportError:
     OBJECT_DETECTION_AVAILABLE = False
     print("AVISO: Detecção de objetos não disponível. Instale ultralytics: pip install ultralytics")
 
+# Importa o logger de eventos
+try:
+    from app.event_logger import log_event, EventType, EventSeverity
+    EVENT_LOGGING_AVAILABLE = True
+except ImportError:
+    EVENT_LOGGING_AVAILABLE = False
+    print("AVISO: Logger de eventos não disponível.")
+
 
 def create_no_camera_frame(cam_id, width=640, height=480):
     """
@@ -227,6 +235,11 @@ class CameraWorker(threading.Thread):
             if not ret:
                 print(f"ERRO ({self.cam_id}): Não conseguiu ler frame para iniciar gravação.")
                 self.is_recording = False
+                # Registra erro no log
+                if EVENT_LOGGING_AVAILABLE:
+                    log_event(EventType.SYSTEM_ERROR, EventSeverity.ERROR, 
+                             camera_id=self.cam_id,
+                             message=f"Falha ao iniciar gravação: não foi possível ler frame")
                 return
         
         # Pega as dimensões do frame (altura, largura)
@@ -248,6 +261,13 @@ class CameraWorker(threading.Thread):
         self.video_writer = cv2.VideoWriter(nome_arquivo, fourcc, fps, (largura, altura))
         
         print(f"Salvando vídeo ({self.cam_id}) em: {nome_arquivo}")
+        
+        # Registra evento de início de gravação
+        if EVENT_LOGGING_AVAILABLE:
+            log_event(EventType.RECORDING_STARTED, EventSeverity.INFO,
+                     camera_id=self.cam_id,
+                     message=f"Gravação iniciada",
+                     details={'filename': nome_arquivo, 'resolution': f"{largura}x{altura}", 'fps': fps})
 
     def stop_recording_logic(self):
         """
@@ -266,6 +286,12 @@ class CameraWorker(threading.Thread):
             self.video_writer.release()  # Fecha o arquivo
             self.video_writer = None  # Limpa a variável
             print(f"Arquivo de vídeo ({self.cam_id}) salvo e fechado.")
+            
+            # Registra evento de parada de gravação
+            if EVENT_LOGGING_AVAILABLE:
+                log_event(EventType.RECORDING_STOPPED, EventSeverity.INFO,
+                         camera_id=self.cam_id,
+                         message=f"Gravação parada")
 
     def run(self):
         """
@@ -392,6 +418,11 @@ class CameraWorker(threading.Thread):
                         # Se não está gravando, inicia a gravação
                         if not self.is_recording:
                             print(f"DETECÇÃO ({self.cam_id}): Movimento detectado! Iniciando gravação...")
+                            # Registra evento de detecção de movimento
+                            if EVENT_LOGGING_AVAILABLE:
+                                log_event(EventType.MOTION_DETECTED, EventSeverity.INFO,
+                                         camera_id=self.cam_id,
+                                         message=f"Movimento detectado - iniciando gravação automática")
                             self.start_recording_logic()
                     else:
                         # Não há movimento neste frame
@@ -455,12 +486,22 @@ class CameraWorker(threading.Thread):
                                         self.start_recording_logic()
                                         self.last_motion_time = current_time  # Atualiza para não parar imediatamente
                         
-                        # Log das detecções (opcional - pode comentar para reduzir spam)
-                        # print(f"DETECÇÃO ({self.cam_id}): {len(detected_objects)} objeto(s) detectado(s): {[obj['class'] for obj in detected_objects]}")
+                        # Registra evento de detecção de objetos
+                        if EVENT_LOGGING_AVAILABLE:
+                            detected_classes = [obj['class'] for obj in detected_objects]
+                            log_event(EventType.OBJECT_DETECTED, EventSeverity.INFO,
+                                     camera_id=self.cam_id,
+                                     message=f"{len(detected_objects)} objeto(s) detectado(s): {', '.join(detected_classes)}",
+                                     details={'objects': detected_classes, 'count': len(detected_objects)})
                     
                 except Exception as e:
                     # Se der erro na detecção, apenas registra e continua
                     print(f"ERRO na detecção de objetos ({self.cam_id}): {e}")
+                    # Registra erro no log
+                    if EVENT_LOGGING_AVAILABLE:
+                        log_event(EventType.SYSTEM_ERROR, EventSeverity.ERROR,
+                                 camera_id=self.cam_id,
+                                 message=f"Erro na detecção de objetos: {str(e)}")
     
             # ================================================================
             # GRAVAÇÃO DE VÍDEO (Manual ou Automática)

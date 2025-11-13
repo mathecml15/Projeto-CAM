@@ -7,6 +7,7 @@ users.json
 # Arquivos de configuração (específicos de cada instalação)
 cameras_config.json
 system_config.json
+events_log.json
 
 # Banco de dados SQLite
 *.db

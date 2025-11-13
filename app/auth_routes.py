@@ -17,6 +17,13 @@ from app.auth import (
     get_current_user, login_required
 )
 
+# Importa o logger de eventos
+try:
+    from app.event_logger import log_event, EventType, EventSeverity
+    EVENT_LOGGING_AVAILABLE = True
+except ImportError:
+    EVENT_LOGGING_AVAILABLE = False
+
 
 def registrar_rotas_auth(app):
     """
@@ -59,6 +66,12 @@ def registrar_rotas_auth(app):
                 session['user'] = username
                 flash('Login realizado com sucesso!', 'success')
                 
+                # Registra evento de login
+                if EVENT_LOGGING_AVAILABLE:
+                    log_event(EventType.USER_LOGIN, EventSeverity.INFO,
+                             message=f"Usuário '{username}' fez login",
+                             user=username)
+                
                 # Redireciona para a página principal
                 # Tenta pegar a página que o usuário queria acessar (se houver)
                 next_page = request.args.get('next')
@@ -68,6 +81,13 @@ def registrar_rotas_auth(app):
             else:
                 # Se a autenticação falhou, mostra mensagem de erro
                 flash(message, 'error')
+                
+                # Registra tentativa de login falhada
+                if EVENT_LOGGING_AVAILABLE:
+                    log_event(EventType.SYSTEM_ERROR, EventSeverity.WARNING,
+                             message=f"Tentativa de login falhou para usuário '{username}'",
+                             user=username)
+                
                 return render_template('login.html')
         
         # Se for GET, mostra a página de login
@@ -127,9 +147,18 @@ def registrar_rotas_auth(app):
         Rota de logout.
         Remove o usuário da sessão e redireciona para a página de login.
         """
+        # Pega o usuário antes de fazer logout
+        user = get_current_user()
+        
         # Remove o usuário da sessão
         logout_user()
         flash('Logout realizado com sucesso!', 'success')
+        
+        # Registra evento de logout
+        if EVENT_LOGGING_AVAILABLE:
+            log_event(EventType.USER_LOGOUT, EventSeverity.INFO,
+                     message=f"Usuário '{user}' fez logout",
+                     user=user)
         return redirect(url_for('login'))
     
     # ============================================================================
