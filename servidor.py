@@ -58,9 +58,36 @@ app = Flask(__name__)
 # SECRET_KEY é usada para criptografar as sessões (cookies)
 # A chave é carregada do arquivo .env por segurança (nunca coloque no código!)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-app.config['SESSION_COOKIE_SECURE'] = False  # True em produção com HTTPS
+# Configuração HTTPS: True se usar SSL, False para desenvolvimento
+USE_HTTPS = os.getenv('USE_HTTPS', 'False').lower() == 'true'
+SSL_CERT_PATH = os.getenv('SSL_CERT_PATH', 'cert.pem')
+SSL_KEY_PATH = os.getenv('SSL_KEY_PATH', 'key.pem')
+# Configuração de cookies de sessão
+# Para desenvolvimento com certificado auto-assinado, é CRÍTICO
+# permitir cookies mesmo com certificado não confiável
+# Por padrão, se HTTPS está ativo, permite cookies inseguros (desenvolvimento)
+ALLOW_INSECURE_COOKIES = os.getenv('ALLOW_INSECURE_COOKIES', 'True' if USE_HTTPS else 'False').lower() == 'true'
+
+# CRÍTICO: Com certificado auto-assinado, SESSION_COOKIE_SECURE DEVE ser False
+# Caso contrário, os cookies não serão enviados pelo navegador e a sessão não funcionará
+# Por padrão, se HTTPS está ativo, permite cookies inseguros (ALLOW_INSECURE_COOKIES=True)
+if USE_HTTPS:
+    if ALLOW_INSECURE_COOKIES:
+        # Desenvolvimento: certificado auto-assinado - cookies não seguros
+        # Isso permite que cookies funcionem mesmo com certificado não confiável
+        app.config['SESSION_COOKIE_SECURE'] = False
+        app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Lax funciona melhor que None sem Secure
+    else:
+        # Produção: certificado válido - cookies seguros
+        app.config['SESSION_COOKIE_SECURE'] = True
+        app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+else:
+    # Sem HTTPS, não usa cookies seguros
+    app.config['SESSION_COOKIE_SECURE'] = False
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Protege contra XSS
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Protege contra CSRF
+app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 horas
 
 # Registra todas as rotas no app
 registrar_rotas_auth(app)  # Registra rotas de autenticação primeiro
@@ -140,16 +167,179 @@ def main():
     
     print(f"\n=== WORKERS INICIADOS: {len(g_cameras)} camera(s) ativa(s) ===")
     print(f"\n=== INICIANDO SERVIDOR FLASK ===")
-    print(f"Acesse: http://127.0.0.1:5000")
-    print(f"ou:     http://localhost:5000")
+    
+    # Configuração de porta
+    port = int(os.getenv('PORT', '5000'))
+    
+    # Carrega configuração HTTPS (usa variável local para não modificar global)
+    use_https = USE_HTTPS
+    
+    # Verifica se deve usar HTTPS
+    if use_https:
+        # Verifica se os certificados existem
+        if not os.path.exists(SSL_CERT_PATH) or not os.path.exists(SSL_KEY_PATH):
+            print(f"\n⚠️  AVISO: Certificados SSL não encontrados!")
+            print(f"   Certificado: {SSL_CERT_PATH}")
+            print(f"   Chave: {SSL_KEY_PATH}")
+            print(f"\n   🔄 Tentando gerar certificados automaticamente...")
+            
+            # Tenta gerar certificados automaticamente
+            try:
+                import subprocess
+                import sys
+                
+                # Comando para gerar certificado auto-assinado
+                cmd = [
+                    'openssl', 'req', '-x509', '-newkey', 'rsa:4096',
+                    '-nodes',  # Não criptografa a chave privada
+                    '-out', SSL_CERT_PATH,
+                    '-keyout', SSL_KEY_PATH,
+                    '-days', '365',
+                    '-subj', '/C=BR/ST=SP/L=SaoPaulo/O=VMS/CN=localhost'
+                ]
+                
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+                
+                if result.returncode == 0 and os.path.exists(SSL_CERT_PATH) and os.path.exists(SSL_KEY_PATH):
+                    print(f"   ✅ Certificados gerados com sucesso!")
+                    print(f"   📋 Certificado: {os.path.abspath(SSL_CERT_PATH)}")
+                    print(f"   📋 Chave: {os.path.abspath(SSL_KEY_PATH)}")
+                else:
+                    raise Exception("Falha ao gerar certificados")
+                    
+            except FileNotFoundError:
+                print(f"   ❌ OpenSSL não encontrado!")
+                print(f"\n   💡 Soluções:")
+                print(f"   1. Instale OpenSSL:")
+                print(f"      Windows: Baixe de https://slproweb.com/products/Win32OpenSSL.html")
+                print(f"      Ou use: python gerar_certificado_ssl.py")
+                print(f"   2. Gere manualmente:")
+                print(f"      openssl req -x509 -newkey rsa:4096 -nodes -out {SSL_CERT_PATH} -keyout {SSL_KEY_PATH} -days 365")
+                print(f"   3. Desative HTTPS: USE_HTTPS=False no .env")
+                print(f"\n   Iniciando sem HTTPS...")
+                use_https = False
+            except Exception as e:
+                print(f"   ❌ Erro ao gerar certificados: {e}")
+                print(f"\n   💡 Gere manualmente: python gerar_certificado_ssl.py")
+                print(f"   Ou desative HTTPS: USE_HTTPS=False no .env")
+                print(f"\n   Iniciando sem HTTPS...")
+                use_https = False
+        else:
+            # Certificados existem, verifica se são válidos
+            print(f"   ✅ Certificados encontrados:")
+            print(f"      Certificado: {os.path.abspath(SSL_CERT_PATH)}")
+            print(f"      Chave: {os.path.abspath(SSL_KEY_PATH)}")
+            
+            # Verifica tamanho dos arquivos
+            cert_size = os.path.getsize(SSL_CERT_PATH)
+            key_size = os.path.getsize(SSL_KEY_PATH)
+            print(f"      Tamanho certificado: {cert_size} bytes")
+            print(f"      Tamanho chave: {key_size} bytes")
+            
+            if cert_size == 0 or key_size == 0:
+                print(f"   ⚠️  AVISO: Certificados estão vazios! Gerando novos...")
+                try:
+                    import subprocess
+                    cmd = [
+                        'openssl', 'req', '-x509', '-newkey', 'rsa:4096',
+                        '-nodes', '-out', SSL_CERT_PATH, '-keyout', SSL_KEY_PATH,
+                        '-days', '365', '-subj', '/C=BR/ST=SP/L=SaoPaulo/O=VMS/CN=localhost'
+                    ]
+                    subprocess.run(cmd, capture_output=True, timeout=30, check=True)
+                    print(f"   ✅ Novos certificados gerados!")
+                except Exception as e:
+                    print(f"   ❌ Erro: {e}")
+                    print(f"   Iniciando sem HTTPS...")
+                    use_https = False
+    
+    if use_https:
+        protocol = 'https'
+        print(f"\n{'='*60}")
+        print(f"🔒 HTTPS ATIVADO")
+        print(f"{'='*60}")
+        print(f"\n✅ Servidor HTTPS iniciado com sucesso!")
+        print(f"\n📍 URLs de acesso:")
+        print(f"   https://127.0.0.1:{port}")
+        print(f"   https://localhost:{port}")
+        print(f"\n⚠️  IMPORTANTE - Certificado Auto-Assinado:")
+        print(f"   1. O navegador mostrará aviso de segurança (NORMAL para desenvolvimento)")
+        print(f"   2. Clique em 'Avançado' ou 'Advanced'")
+        print(f"   3. Clique em 'Continuar para localhost' ou 'Proceed to localhost'")
+        print(f"   4. A página carregará normalmente após isso")
+        print(f"\n💡 Dica: Se a página não carregar após aceitar o certificado:")
+        print(f"   - Limpe cache e cookies do navegador (Ctrl+Shift+Delete)")
+        print(f"   - Tente usar outro navegador (Firefox funciona melhor)")
+        print(f"   - Verifique o console do navegador (F12) para erros")
+        print(f"\n🔐 Configuração de Cookies:")
+        if ALLOW_INSECURE_COOKIES:
+            print(f"   ✅ Cookies permitidos com certificado auto-assinado (desenvolvimento)")
+        else:
+            print(f"   ⚠️  Cookies seguros ativados (pode causar problemas com certificado auto-assinado)")
+            print(f"   💡 Se houver problemas, adicione ao .env: ALLOW_INSECURE_COOKIES=True")
+    else:
+        protocol = 'http'
+        print(f"\n{'='*60}")
+        print(f"🌐 HTTP ATIVADO")
+        print(f"{'='*60}")
+        print(f"\n📍 URLs de acesso:")
+        print(f"   http://127.0.0.1:{port}")
+        print(f"   http://localhost:{port}")
+    
     print(f"\nPressione Ctrl+C para parar o servidor.\n")
     
     # Inicia o servidor Flask
     # host='0.0.0.0' = aceita conexões de qualquer IP
-    # port=5000 = porta do servidor
-    # debug=False = modo produção (sem debug)
+    # port = porta do servidor (padrão 5000)
+    # debug=True com HTTPS para ver erros (ajuda a diagnosticar problemas)
     # threaded=True = permite múltiplas requisições simultâneas
-    app.run(host='0.0.0.0', port=5000, debug=False, threaded=True)
+    try:
+        if use_https:
+            print(f"\n🔒 Iniciando servidor HTTPS na porta {port}...")
+            print(f"📋 Certificado: {os.path.abspath(SSL_CERT_PATH)}")
+            print(f"📋 Chave: {os.path.abspath(SSL_KEY_PATH)}")
+            
+            # Verifica se os certificados são válidos
+            try:
+                import ssl
+                context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+                context.load_cert_chain(SSL_CERT_PATH, SSL_KEY_PATH)
+                print(f"   ✅ Certificados validados com sucesso!")
+            except Exception as e:
+                print(f"   ⚠️  AVISO: Problema ao validar certificados: {e}")
+                print(f"   Continuando mesmo assim...")
+                context = (SSL_CERT_PATH, SSL_KEY_PATH)
+            
+            print(f"\n🚀 Servidor iniciando...")
+            app.run(
+                host='0.0.0.0', 
+                port=port, 
+                debug=True,  # Ativa debug para ver erros
+                threaded=True,
+                ssl_context=(SSL_CERT_PATH, SSL_KEY_PATH),
+                use_reloader=False,  # Desativa reloader para evitar problemas
+                use_debugger=True  # Ativa debugger
+            )
+        else:
+            print(f"\n🌐 Iniciando servidor HTTP na porta {port}...")
+            app.run(host='0.0.0.0', port=port, debug=False, threaded=True)
+    except OSError as e:
+        if "Address already in use" in str(e) or "already in use" in str(e).lower():
+            print(f"\n❌ ERRO: Porta {port} já está em uso!")
+            print(f"\n💡 Soluções:")
+            print(f"   1. Feche outras instâncias do servidor")
+            print(f"   2. Use outra porta: PORT=5001 no .env")
+            print(f"   3. No Windows: netstat -ano | findstr :{port}")
+        else:
+            print(f"\n❌ ERRO ao iniciar servidor: {e}")
+        raise
+    except Exception as e:
+        print(f"\n❌ ERRO ao iniciar servidor: {e}")
+        print(f"\n💡 Dicas:")
+        print(f"   - Verifique se a porta {port} não está em uso")
+        print(f"   - Verifique se os certificados SSL estão corretos")
+        print(f"   - Tente desativar HTTPS: USE_HTTPS=False no .env")
+        print(f"   - Verifique o console do navegador (F12) para erros")
+        raise
 
 # ============================================================================
 # EXECUÇÃO DO PROGRAMA

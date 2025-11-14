@@ -288,8 +288,8 @@
         <div class="nav-links">
             <a href="/dashboard">Dashboard</a>
             <a href="/">Câmeras</a>
-            <a href="/cameras">Gerenciar</a>
-            <a href="/settings">Configurações</a>
+            {% if has_manage_cameras %}<a href="/cameras">Gerenciar</a>{% endif %}
+            {% if has_manage_settings %}<a href="/settings">Configurações</a>{% endif %}
             <a href="/events" class="active">Eventos</a>
             <a href="/export">Exportar</a>
         </div>

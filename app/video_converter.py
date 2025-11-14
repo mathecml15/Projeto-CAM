@@ -8,8 +8,6 @@ Este módulo converte vídeos entre diferentes formatos e extrai frames.
 
 import os
 import cv2
-import subprocess
-import sys
 from pathlib import Path
 from typing import Optional, Tuple, List
 
@@ -22,65 +20,7 @@ SUPPORTED_FORMATS = {
     'webm': {'ext': '.webm', 'codec': 'VP80', 'mime': 'video/webm'}
 }
 
-# Caminho base do projeto (pasta onde está servidor.py)
-PROJECT_ROOT = Path(__file__).parent.parent.resolve()
-
-# Possíveis locais do ffmpeg (em ordem de prioridade)
-FFMPEG_PATHS = [
-    PROJECT_ROOT / 'tools' / 'ffmpeg' / 'bin' / 'ffmpeg.exe',  # Windows na pasta do projeto
-    PROJECT_ROOT / 'tools' / 'ffmpeg' / 'bin' / 'ffmpeg',     # Linux/Mac na pasta do projeto
-    PROJECT_ROOT / 'ffmpeg' / 'bin' / 'ffmpeg.exe',           # Windows (estrutura alternativa)
-    PROJECT_ROOT / 'ffmpeg' / 'bin' / 'ffmpeg',               # Linux/Mac (estrutura alternativa)
-]
-
-
-def get_ffmpeg_path():
-    """
-    Encontra o caminho do executável ffmpeg.
-    Procura primeiro na pasta do projeto, depois no PATH do sistema.
-    
-    Returns:
-        Caminho do ffmpeg se encontrado, None caso contrário
-    """
-    # Primeiro, procura na pasta do projeto
-    for ffmpeg_path in FFMPEG_PATHS:
-        if ffmpeg_path.exists() and os.access(ffmpeg_path, os.X_OK):
-            return str(ffmpeg_path)
-    
-    # Se não encontrou no projeto, procura no PATH do sistema
-    try:
-        # Tenta executar 'ffmpeg' diretamente (está no PATH)
-        result = subprocess.run(['ffmpeg', '-version'], 
-                              capture_output=True, 
-                              check=True,
-                              timeout=5)
-        return 'ffmpeg'  # Retorna o comando direto (está no PATH)
-    except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
-        pass
-    
-    return None
-
-
-def check_ffmpeg():
-    """
-    Verifica se o ffmpeg está disponível (no projeto ou no sistema).
-    
-    Returns:
-        True se ffmpeg está disponível, False caso contrário
-    """
-    ffmpeg_path = get_ffmpeg_path()
-    if not ffmpeg_path:
-        return False
-    
-    try:
-        # Testa se o ffmpeg funciona
-        subprocess.run([ffmpeg_path, '-version'], 
-                      capture_output=True, 
-                      check=True,
-                      timeout=5)
-        return True
-    except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
-        return False
+# Nota: FFmpeg foi removido. O sistema agora usa apenas OpenCV para conversão de vídeos.
 
 
 def convert_video_opencv(input_path: str, output_path: str, 
@@ -166,82 +106,6 @@ def convert_video_opencv(input_path: str, output_path: str,
         return False, f"Erro ao converter vídeo: {str(e)}"
 
 
-def convert_video_ffmpeg(input_path: str, output_path: str,
-                         format_type: str = 'mp4',
-                         quality: str = 'medium',
-                         fps: Optional[float] = None) -> Tuple[bool, str]:
-    """
-    Converte vídeo usando ffmpeg (mais eficiente e com melhor qualidade).
-    
-    Args:
-        input_path: Caminho do vídeo de entrada
-        output_path: Caminho do vídeo de saída
-        format_type: Formato de saída ('mp4', 'avi', 'mov')
-        quality: Qualidade ('low', 'medium', 'high')
-        fps: FPS de saída (None = manter original)
-    
-    Returns:
-        (sucesso, mensagem)
-    """
-    if not os.path.exists(input_path):
-        return False, f"Arquivo não encontrado: {input_path}"
-    
-    if format_type not in SUPPORTED_FORMATS:
-        return False, f"Formato não suportado: {format_type}"
-    
-    try:
-        # Obtém o caminho do ffmpeg
-        ffmpeg_path = get_ffmpeg_path()
-        if not ffmpeg_path:
-            return False, "ffmpeg não encontrado no projeto nem no PATH do sistema"
-        
-        # Define parâmetros de qualidade para ffmpeg
-        quality_params = {
-            'low': ['-crf', '28', '-preset', 'fast'],
-            'medium': ['-crf', '23', '-preset', 'medium'],
-            'high': ['-crf', '18', '-preset', 'slow']
-        }
-        
-        # Comando base do ffmpeg (usa o caminho encontrado)
-        cmd = [ffmpeg_path, '-i', input_path, '-y']  # -y sobrescreve arquivo existente
-        
-        # Adiciona parâmetros de qualidade
-        cmd.extend(quality_params.get(quality, quality_params['medium']))
-        
-        # Define FPS se especificado
-        if fps:
-            cmd.extend(['-r', str(fps)])
-        
-        # Define codec baseado no formato
-        if format_type == 'mp4':
-            cmd.extend(['-c:v', 'libx264', '-c:a', 'aac'])
-        elif format_type == 'avi':
-            cmd.extend(['-c:v', 'libx264', '-c:a', 'mp3'])
-        elif format_type == 'mov':
-            cmd.extend(['-c:v', 'libx264', '-c:a', 'aac'])
-        elif format_type == 'webm':
-            cmd.extend(['-c:v', 'libvpx-vp9', '-c:a', 'libopus'])
-        
-        # Arquivo de saída
-        cmd.append(output_path)
-        
-        # Executa conversão
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=300  # 5 minutos máximo
-        )
-        
-        if result.returncode == 0:
-            return True, "Vídeo convertido com sucesso usando ffmpeg!"
-        else:
-            return False, f"Erro no ffmpeg: {result.stderr[:200]}"
-    
-    except subprocess.TimeoutExpired:
-        return False, "Conversão excedeu o tempo limite (5 minutos)"
-    except Exception as e:
-        return False, f"Erro ao converter vídeo: {str(e)}"
 
 
 def convert_video(input_path: str, output_path: str,
@@ -249,7 +113,7 @@ def convert_video(input_path: str, output_path: str,
                   quality: str = 'medium',
                   fps: Optional[float] = None) -> Tuple[bool, str]:
     """
-    Converte vídeo usando o melhor método disponível.
+    Converte vídeo usando OpenCV.
     
     Args:
         input_path: Caminho do vídeo de entrada
@@ -261,12 +125,8 @@ def convert_video(input_path: str, output_path: str,
     Returns:
         (sucesso, mensagem)
     """
-    # Tenta usar ffmpeg primeiro (melhor qualidade)
-    if check_ffmpeg():
-        return convert_video_ffmpeg(input_path, output_path, format_type, quality, fps)
-    else:
-        # Fallback para OpenCV
-        return convert_video_opencv(input_path, output_path, format_type, quality, fps)
+    # Usa OpenCV para conversão
+    return convert_video_opencv(input_path, output_path, format_type, quality, fps)
 
 
 def extract_frames(video_path: str, output_folder: str,

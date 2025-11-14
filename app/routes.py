@@ -12,7 +12,7 @@ from flask import render_template, jsonify, send_from_directory, Response, reque
 # Importa as configurações e módulos necessários
 from app.config import PASTA_GRAVACOES, g_cameras
 from app.video_stream import gerar_frames
-from app.auth import login_required, get_current_user
+from app.auth import login_required, get_current_user, role_required, permission_required, get_user_role, user_has_permission
 from app.camera_manager import (
     load_cameras_config, add_camera, remove_camera, update_camera,
     list_cameras, load_system_config, save_system_config
@@ -24,7 +24,7 @@ from app.event_logger import (
 )
 from app.video_converter import (
     convert_video, extract_frames, get_video_info,
-    SUPPORTED_FORMATS, check_ffmpeg
+    SUPPORTED_FORMATS
 )
 import os
 
@@ -50,7 +50,10 @@ def registrar_rotas(app):
         """
         # Pega o usuário atual para passar para o template
         user = get_current_user()
-        return render_template('index.html', user=user)
+        # Verifica permissões para mostrar/ocultar links na navbar
+        has_manage_cameras = user_has_permission(user, 'manage_cameras') if user else False
+        has_manage_settings = user_has_permission(user, 'manage_settings') if user else False
+        return render_template('index.html', user=user, has_manage_cameras=has_manage_cameras, has_manage_settings=has_manage_settings)
     
     # ============================================================================
     # ROTAS DE INFORMAÇÃO
@@ -129,7 +132,8 @@ def registrar_rotas(app):
     # ============================================================================
     
     @app.route('/start_recording/<cam_id>', methods=['POST'])
-    @login_required  # Protege a rota - requer login
+    @login_required
+    @permission_required('control_cameras')  # Requer permissão para controlar câmeras
     def start_recording(cam_id):
         """
         Inicia gravação manual de uma câmera específica.
@@ -161,7 +165,8 @@ def registrar_rotas(app):
         return jsonify(status=f"Gravando ({cam_id})...")
     
     @app.route('/stop_recording/<cam_id>', methods=['POST'])
-    @login_required  # Protege a rota - requer login
+    @login_required
+    @permission_required('control_cameras')  # Requer permissão para controlar câmeras
     def stop_recording(cam_id):
         """
         Para a gravação manual de uma câmera específica.
@@ -384,25 +389,33 @@ def registrar_rotas(app):
         Página principal do dashboard com estatísticas.
         """
         user = get_current_user()
-        return render_template('dashboard.html', user=user)
+        has_manage_cameras = user_has_permission(user, 'manage_cameras') if user else False
+        has_manage_settings = user_has_permission(user, 'manage_settings') if user else False
+        return render_template('dashboard.html', user=user, has_manage_cameras=has_manage_cameras, has_manage_settings=has_manage_settings)
     
     @app.route('/cameras')
     @login_required
+    @permission_required('manage_cameras')  # Requer permissão para gerenciar câmeras
     def cameras_page():
         """
         Página para gerenciar câmeras (adicionar, remover, editar).
         """
         user = get_current_user()
-        return render_template('cameras.html', user=user)
+        has_manage_cameras = user_has_permission(user, 'manage_cameras') if user else False
+        has_manage_settings = user_has_permission(user, 'manage_settings') if user else False
+        return render_template('cameras.html', user=user, has_manage_cameras=has_manage_cameras, has_manage_settings=has_manage_settings)
     
     @app.route('/settings')
     @login_required
+    @permission_required('manage_settings')  # Requer permissão para gerenciar configurações
     def settings_page():
         """
         Página de configurações do sistema.
         """
         user = get_current_user()
-        return render_template('settings.html', user=user)
+        has_manage_cameras = user_has_permission(user, 'manage_cameras') if user else False
+        has_manage_settings = user_has_permission(user, 'manage_settings') if user else False
+        return render_template('settings.html', user=user, has_manage_cameras=has_manage_cameras, has_manage_settings=has_manage_settings)
     
     # ============================================================================
     # API DE GERENCIAMENTO DE CÂMERAS
@@ -419,6 +432,7 @@ def registrar_rotas(app):
     
     @app.route('/api/cameras/add', methods=['POST'])
     @login_required
+    @permission_required('manage_cameras')  # Requer permissão para gerenciar câmeras
     def api_add_camera():
         """
         Adiciona uma nova câmera.
@@ -438,6 +452,7 @@ def registrar_rotas(app):
     
     @app.route('/api/cameras/remove/<cam_id>', methods=['DELETE'])
     @login_required
+    @permission_required('manage_cameras')  # Requer permissão para gerenciar câmeras
     def api_remove_camera(cam_id):
         """
         Remove uma câmera.
@@ -447,6 +462,7 @@ def registrar_rotas(app):
     
     @app.route('/api/cameras/update/<cam_id>', methods=['PUT'])
     @login_required
+    @permission_required('manage_cameras')  # Requer permissão para gerenciar câmeras
     def api_update_camera(cam_id):
         """
         Atualiza informações de uma câmera.
@@ -475,6 +491,7 @@ def registrar_rotas(app):
     
     @app.route('/api/settings/update', methods=['POST'])
     @login_required
+    @permission_required('manage_settings')  # Requer permissão para gerenciar configurações
     def api_update_settings():
         """
         Atualiza configurações do sistema.
@@ -567,7 +584,9 @@ def registrar_rotas(app):
         Página para visualizar histórico de eventos/logs.
         """
         user = get_current_user()
-        return render_template('events.html', user=user)
+        has_manage_cameras = user_has_permission(user, 'manage_cameras') if user else False
+        has_manage_settings = user_has_permission(user, 'manage_settings') if user else False
+        return render_template('events.html', user=user, has_manage_cameras=has_manage_cameras, has_manage_settings=has_manage_settings)
     
     @app.route('/api/events')
     @login_required
@@ -621,6 +640,7 @@ def registrar_rotas(app):
     
     @app.route('/api/events/clear', methods=['POST'])
     @login_required
+    @role_required('admin')  # Apenas admins podem limpar eventos
     def api_clear_events():
         """
         Limpa eventos do log.
@@ -649,7 +669,9 @@ def registrar_rotas(app):
         Página para gerenciar exportações de vídeos.
         """
         user = get_current_user()
-        return render_template('export.html', user=user)
+        has_manage_cameras = user_has_permission(user, 'manage_cameras') if user else False
+        has_manage_settings = user_has_permission(user, 'manage_settings') if user else False
+        return render_template('export.html', user=user, has_manage_cameras=has_manage_cameras, has_manage_settings=has_manage_settings)
     
     @app.route('/api/export/convert', methods=['POST'])
     @login_required
@@ -793,8 +815,7 @@ def registrar_rotas(app):
         Retorna os formatos suportados.
         """
         return jsonify({
-            'formats': SUPPORTED_FORMATS,
-            'ffmpeg_available': check_ffmpeg()
+            'formats': SUPPORTED_FORMATS
         })
     
     @app.route('/download/<filename>')

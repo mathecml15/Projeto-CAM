@@ -57,3 +57,11 @@ gravacoes/
 tools/ffmpeg/
 ffmpeg/
 *.tar.xz
+
+# Certificados SSL (NUNCA SUBIR - contém chaves privadas!)
+*.pem
+cert.pem
+key.pem
+*.crt
+*.key
+*.cert

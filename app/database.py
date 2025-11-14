@@ -115,9 +115,15 @@ def init_database():
                     data_nascimento TEXT NOT NULL,
                     created_at TEXT NOT NULL,
                     last_login TEXT,
-                    is_active INTEGER DEFAULT 1
+                    is_active INTEGER DEFAULT 1,
+                    role TEXT DEFAULT 'viewer'
                 )
             ''')
+            # Adiciona coluna role se não existir (para migração)
+            try:
+                cursor.execute('ALTER TABLE users ADD COLUMN role TEXT DEFAULT "viewer"')
+            except:
+                pass  # Coluna já existe
             # Cria índices para melhorar performance (SQLite)
             cursor.execute('''
                 CREATE INDEX IF NOT EXISTS idx_username ON users(username)
@@ -137,9 +143,15 @@ def init_database():
                     data_nascimento DATE NOT NULL,
                     created_at TIMESTAMP NOT NULL,
                     last_login TIMESTAMP,
-                    is_active BOOLEAN DEFAULT TRUE
+                    is_active BOOLEAN DEFAULT TRUE,
+                    role VARCHAR(20) DEFAULT 'viewer'
                 )
             ''')
+            # Adiciona coluna role se não existir (para migração)
+            try:
+                cursor.execute('ALTER TABLE users ADD COLUMN role VARCHAR(20) DEFAULT \'viewer\'')
+            except:
+                pass  # Coluna já existe
             # Cria índices para melhorar performance (PostgreSQL)
             cursor.execute('''
                 CREATE INDEX IF NOT EXISTS idx_username ON users(username)
@@ -160,10 +172,16 @@ def init_database():
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     last_login TIMESTAMP NULL,
                     is_active BOOLEAN DEFAULT TRUE,
+                    role VARCHAR(20) DEFAULT 'viewer',
                     INDEX idx_username (username),
                     INDEX idx_email (email)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             ''')
+            # Adiciona coluna role se não existir (para migração)
+            try:
+                cursor.execute('ALTER TABLE users ADD COLUMN role VARCHAR(20) DEFAULT "viewer"')
+            except:
+                pass  # Coluna já existe
         
         # Salva as mudanças
         conn.commit()
@@ -223,7 +241,7 @@ def user_exists(username):
         conn.close()
 
 
-def create_user_db(username, password_hash, email, cpf, data_nascimento, created_at=None):
+def create_user_db(username, password_hash, email, cpf, data_nascimento, created_at=None, role='viewer'):
     """
     Cria um novo usuário no banco de dados.
     
@@ -253,22 +271,22 @@ def create_user_db(username, password_hash, email, cpf, data_nascimento, created
             # Insere o novo usuário
             if DB_TYPE == 'sqlite':
                 cursor.execute('''
-                    INSERT INTO users (username, password_hash, email, cpf, data_nascimento, created_at, is_active)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                ''', (username_lower, password_hash, email_lower, cpf, data_nascimento, created_at, 1))
+                    INSERT INTO users (username, password_hash, email, cpf, data_nascimento, created_at, is_active, role)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (username_lower, password_hash, email_lower, cpf, data_nascimento, created_at, 1, role))
                 user_id = cursor.lastrowid
             elif DB_TYPE == 'postgresql':
                 cursor.execute('''
-                    INSERT INTO users (username, password_hash, email, cpf, data_nascimento, created_at, is_active)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id
-                ''', (username_lower, password_hash, email_lower, cpf, data_nascimento, created_at, True))
+                    INSERT INTO users (username, password_hash, email, cpf, data_nascimento, created_at, is_active, role)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
+                ''', (username_lower, password_hash, email_lower, cpf, data_nascimento, created_at, True, role))
                 user_id = cursor.fetchone()[0]
             else:
                 # MySQL
                 cursor.execute('''
-                    INSERT INTO users (username, password_hash, email, cpf, data_nascimento, is_active)
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                ''', (username_lower, password_hash, email_lower, cpf, data_nascimento, True))
+                    INSERT INTO users (username, password_hash, email, cpf, data_nascimento, is_active, role)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                ''', (username_lower, password_hash, email_lower, cpf, data_nascimento, True, role))
                 user_id = cursor.lastrowid
             
             conn.commit()
@@ -575,6 +593,61 @@ def get_database_stats():
             'db_type': DB_TYPE,
             'db_file': DB_FILE if DB_TYPE == 'sqlite' else f"{DB_TYPE}://{DB_HOST}:{DB_PORT}/{DB_NAME}"
         }
+    finally:
+        conn.close()
+
+
+def get_user_role(username):
+    """
+    Obtém o role (perfil) de um usuário.
+    
+    username: Nome de usuário
+    
+    Retorna: Role do usuário ('admin', 'operator', 'viewer') ou None
+    """
+    user = get_user_by_username(username)
+    if user:
+        return user.get('role', 'viewer')
+    return None
+
+
+def update_user_role(username, role):
+    """
+    Atualiza o role de um usuário.
+    
+    username: Nome de usuário
+    role: Novo role ('admin', 'operator', 'viewer')
+    
+    Retorna: True se atualizado com sucesso, False caso contrário
+    """
+    valid_roles = ['admin', 'operator', 'viewer']
+    if role not in valid_roles:
+        return False
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        if DB_TYPE == 'sqlite':
+            cursor.execute('''
+                UPDATE users 
+                SET role = ? 
+                WHERE username = ?
+            ''', (role, username.lower()))
+        else:
+            # PostgreSQL/MySQL
+            cursor.execute('''
+                UPDATE users 
+                SET role = %s 
+                WHERE username = %s
+            ''', (role, username.lower()))
+        
+        conn.commit()
+        return cursor.rowcount > 0
+    except Exception as e:
+        print(f"Erro ao atualizar role do usuário: {e}")
+        conn.rollback()
+        return False
     finally:
         conn.close()
 

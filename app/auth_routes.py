@@ -45,6 +45,8 @@ def registrar_rotas_auth(app):
         """
         # Se o usuário já estiver logado, redireciona para a página principal
         if 'user' in session:
+            # Força salvamento da sessão
+            session.permanent = True
             return redirect('/')
         
         # Se for uma requisição POST (formulário enviado)
@@ -64,6 +66,8 @@ def registrar_rotas_auth(app):
             if success:
                 # Se a autenticação foi bem-sucedida, salva na sessão
                 session['user'] = username
+                # Força o salvamento da sessão
+                session.permanent = True
                 flash('Login realizado com sucesso!', 'success')
                 
                 # Registra evento de login
@@ -75,8 +79,15 @@ def registrar_rotas_auth(app):
                 # Redireciona para a página principal
                 # Tenta pegar a página que o usuário queria acessar (se houver)
                 next_page = request.args.get('next')
-                if next_page:
-                    return redirect(next_page)
+                # Valida o next_page para evitar redirects maliciosos
+                # Como agora usamos request.path, next_page já vem apenas com o path (ex: '/')
+                if next_page and next_page.startswith('/'):
+                    # Garante que não há tentativas de redirect externo
+                    # Remove qualquer query string ou fragmento malicioso
+                    next_page = next_page.split('?')[0].split('#')[0]
+                    if next_page.startswith('/'):
+                        return redirect(next_page)
+                
                 return redirect('/')
             else:
                 # Se a autenticação falhou, mostra mensagem de erro

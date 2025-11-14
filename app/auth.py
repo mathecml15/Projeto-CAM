@@ -135,7 +135,7 @@ def user_exists(username):
         return username.lower() in users
 
 
-def create_user(username, password, email, cpf, data_nascimento):
+def create_user(username, password, email, cpf, data_nascimento, role='viewer'):
     """
     Cria um novo usuário.
     
@@ -182,9 +182,14 @@ def create_user(username, password, email, cpf, data_nascimento):
     password_hash = hash_password(password)
     created_at = datetime.now().isoformat()
     
+    # Validação do role
+    valid_roles = ['admin', 'operator', 'viewer']
+    if role not in valid_roles:
+        role = 'viewer'  # Default para viewer se inválido
+    
     if USE_DATABASE:
         # Usa banco de dados
-        success, message, user_id = create_user_db(username, password_hash, email, cpf, data_nascimento, created_at)
+        success, message, user_id = create_user_db(username, password_hash, email, cpf, data_nascimento, created_at, role)
         return success, message
     else:
         # Modo legado: usa JSON
@@ -273,7 +278,8 @@ def login_required(f):
             if request.is_json or request.path.startswith('/api/'):
                 return jsonify({'error': 'Autenticação necessária'}), 401
             # Redireciona para login com next parameter para voltar após login
-            return redirect(f'/login?next={request.url}')
+            # Usa request.path em vez de request.url para evitar problemas com HTTPS
+            return redirect(f'/login?next={request.path}')
         return f(*args, **kwargs)
     return decorated_function
 
@@ -309,4 +315,193 @@ def get_all_users():
         # Modo legado: usa JSON
         users = load_users()
         return list(users.keys())
+
+
+# ============================================================================
+# SISTEMA DE PERMISSÕES E ROLES
+# ============================================================================
+
+# Definição de roles e suas permissões
+ROLES = {
+    'admin': {
+        'name': 'Administrador',
+        'permissions': [
+            'view_cameras',           # Ver câmeras
+            'control_cameras',        # Controlar câmeras (gravar, parar)
+            'manage_cameras',         # Adicionar/remover câmeras
+            'view_recordings',        # Ver gravações
+            'download_recordings',    # Baixar gravações
+            'delete_recordings',      # Deletar gravações
+            'manage_users',           # Gerenciar usuários
+            'manage_settings',        # Gerenciar configurações do sistema
+            'view_dashboard',         # Ver dashboard
+            'view_events',            # Ver eventos/logs
+            'export_videos',          # Exportar vídeos
+        ]
+    },
+    'operator': {
+        'name': 'Operador',
+        'permissions': [
+            'view_cameras',           # Ver câmeras
+            'control_cameras',        # Controlar câmeras (gravar, parar)
+            'view_recordings',        # Ver gravações
+            'download_recordings',    # Baixar gravações
+            'view_dashboard',         # Ver dashboard
+            'view_events',            # Ver eventos/logs
+            'export_videos',          # Exportar vídeos
+        ]
+    },
+    'viewer': {
+        'name': 'Visualizador',
+        'permissions': [
+            'view_cameras',           # Ver câmeras
+            'view_recordings',        # Ver gravações
+            'download_recordings',    # Baixar gravações
+            'view_dashboard',         # Ver dashboard
+            'view_events',            # Ver eventos/logs
+        ]
+    }
+}
+
+
+def get_user_role(username):
+    """
+    Obtém o role de um usuário.
+    
+    username: Nome de usuário
+    
+    Retorna: Role do usuário ('admin', 'operator', 'viewer') ou 'viewer' por padrão
+    """
+    if USE_DATABASE:
+        try:
+            from app.database import get_user_role as db_get_user_role
+            role = db_get_user_role(username)
+            # Se o role não existe ou é inválido, retorna 'viewer'
+            if not role or role not in ROLES:
+                # Se o role for 'user' (legado), converte para 'viewer'
+                if role == 'user':
+                    return 'viewer'
+                return 'viewer'
+            return role
+        except ImportError:
+            return 'viewer'
+    else:
+        # Modo legado: usuários JSON têm role viewer por padrão
+        return 'viewer'
+
+
+def user_has_permission(username, permission):
+    """
+    Verifica se um usuário tem uma permissão específica.
+    
+    username: Nome de usuário
+    permission: Nome da permissão (ex: 'manage_cameras')
+    
+    Retorna: True se o usuário tem a permissão, False caso contrário
+    """
+    role = get_user_role(username)
+    role_config = ROLES.get(role, ROLES['viewer'])
+    return permission in role_config['permissions']
+
+
+def role_required(*required_roles):
+    """
+    Decorator para proteger rotas que requerem roles específicos.
+    
+    Uso:
+        @app.route('/admin')
+        @login_required
+        @role_required('admin')
+        def admin_page():
+            return "Apenas admins podem ver isso"
+        
+        @app.route('/operator')
+        @login_required
+        @role_required('admin', 'operator')
+        def operator_page():
+            return "Admins ou operadores podem ver isso"
+    
+    required_roles: Lista de roles permitidos (ex: 'admin', 'operator')
+    """
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            # Importa aqui para evitar importação circular
+            from flask import session, request, redirect, jsonify
+            
+            # Verifica se está logado
+            if 'user' not in session:
+                if request.is_json or request.path.startswith('/api/'):
+                    return jsonify({'error': 'Autenticação necessária'}), 401
+                # Usa request.path em vez de request.url para evitar problemas com HTTPS
+                return redirect(f'/login?next={request.path}')
+            
+            # Obtém o role do usuário
+            username = session.get('user')
+            user_role = get_user_role(username)
+            
+            # Verifica se o role do usuário está na lista de roles permitidos
+            if user_role not in required_roles:
+                # Usuário não tem permissão
+                if request.is_json or request.path.startswith('/api/'):
+                    return jsonify({
+                        'error': 'Permissão negada',
+                        'message': f'Esta ação requer um dos seguintes roles: {", ".join(required_roles)}',
+                        'your_role': user_role
+                    }), 403
+                from flask import flash
+                flash(f'Acesso negado. Requer role: {", ".join(required_roles)}', 'error')
+                return redirect('/')
+            
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+
+def permission_required(permission):
+    """
+    Decorator para proteger rotas que requerem permissões específicas.
+    
+    Uso:
+        @app.route('/delete_video')
+        @login_required
+        @permission_required('delete_recordings')
+        def delete_video():
+            return "Apenas usuários com permissão delete_recordings podem fazer isso"
+    
+    permission: Nome da permissão necessária (ex: 'manage_cameras')
+    """
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            # Importa aqui para evitar importação circular
+            from flask import session, request, redirect, jsonify
+            
+            # Verifica se está logado
+            if 'user' not in session:
+                if request.is_json or request.path.startswith('/api/'):
+                    return jsonify({'error': 'Autenticação necessária'}), 401
+                # Usa request.path em vez de request.url para evitar problemas com HTTPS
+                return redirect(f'/login?next={request.path}')
+            
+            # Verifica se o usuário tem a permissão
+            username = session.get('user')
+            if not user_has_permission(username, permission):
+                # Usuário não tem permissão
+                if request.is_json or request.path.startswith('/api/'):
+                    return jsonify({
+                        'error': 'Permissão negada',
+                        'message': f'Esta ação requer a permissão: {permission}',
+                        'your_role': get_user_role(username)
+                    }), 403
+                from flask import flash
+                user_role = get_user_role(username)
+                role_name = ROLES.get(user_role, {}).get('name', user_role)
+                # Mensagem mais informativa
+                flash(f'❌ Acesso negado! Você precisa da permissão "{permission}" para acessar esta página. Seu role atual: {role_name}. Entre em contato com um administrador para obter acesso.', 'error')
+                return redirect('/')
+            
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
