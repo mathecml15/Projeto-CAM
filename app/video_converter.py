@@ -20,7 +20,7 @@ SUPPORTED_FORMATS = {
     'webm': {'ext': '.webm', 'codec': 'VP80', 'mime': 'video/webm'}
 }
 
-# Nota: FFmpeg foi removido. O sistema agora usa apenas OpenCV para conversão de vídeos.
+# O sistema usa OpenCV para conversão de vídeos.
 
 
 def convert_video_opencv(input_path: str, output_path: str, 

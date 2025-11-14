@@ -132,8 +132,6 @@ Projeto/
 │   ├── login.html
 │   ├── register.html
 │   └── ...
-├── tools/                 # Ferramentas externas
-│   └── ffmpeg/
 ├── .env                   # Variáveis de ambiente (criar)
 ├── requirements.txt       # Dependências Python
 └── servidor.py           # Ponto de entrada principal

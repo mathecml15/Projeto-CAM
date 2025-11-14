@@ -65,13 +65,6 @@ Projeto/
 │   ├── export.html
 │   └── settings.html
 │
-├── tools/                          # Ferramentas externas
-│   └── ffmpeg/
-│       └── bin/
-│           ├── ffmpeg.exe
-│           ├── ffplay.exe
-│           └── ffprobe.exe
-│
 ├── .env                            # Variáveis de ambiente (NÃO commitar!)
 ├── .gitignore                     # Arquivos ignorados pelo Git
 ├── README.md                       # Documentação principal
@@ -127,9 +120,6 @@ Arquivos estáticos (CSS, JavaScript, imagens) servidos pelo Flask.
 
 ### `templates/`
 Templates HTML usando Jinja2.
-
-### `tools/`
-Ferramentas externas (FFmpeg, etc.).
 
 ## 🔄 Mudanças Realizadas
 
