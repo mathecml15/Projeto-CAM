@@ -1,0 +1,16 @@
+{
+    "motion_detection": {
+        "cooldown": 5.0,
+        "min_contour_area": 500
+    },
+    "object_detection": {
+        "enabled": false,
+        "model": "models/yolov8n.pt",
+        "confidence_threshold": 0.5,
+        "classes_filter": null,
+        "auto_record_on_objects": null
+    },
+    "recording": {
+        "folder": "gravacoes"
+    }
+}

@@ -13,7 +13,7 @@ from threading import Lock
 from enum import Enum
 
 # Arquivo onde os eventos serão salvos
-EVENTS_LOG_FILE = 'events_log.json'
+EVENTS_LOG_FILE = 'logs/events_log.json'
 MAX_EVENTS = 10000  # Limite máximo de eventos no arquivo
 
 # Lock para operações de arquivo

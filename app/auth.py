@@ -10,9 +10,9 @@ Este arquivo contém todas as funções relacionadas à autenticação:
 - Gerenciamento de sessões
 
 ARMAZENAMENTO:
-- Usuários são armazenados em banco de dados SQL (SQLite, PostgreSQL, MySQL)
+- Usuários são armazenados em banco de dados MySQL
 - Senhas são hasheadas (não são armazenadas em texto puro)
-- Cada usuário tem: id, username, password_hash, created_at, last_login, is_active
+- Cada usuário tem: id, username, password_hash, email, cpf, data_nascimento, created_at, last_login, is_active, role
 """
 
 import os
@@ -22,21 +22,11 @@ from datetime import datetime
 from functools import wraps
 
 # Importa o módulo de banco de dados
-try:
-    from app.database import (
-        init_database, user_exists as db_user_exists,
-        create_user_db, get_user_by_username, get_user_password_hash,
-        update_user_last_login, get_all_users_db, get_database_stats
-    )
-    USE_DATABASE = True
-except ImportError:
-    USE_DATABASE = False
-    print("AVISO: Módulo database.py não encontrado. Usando armazenamento JSON (legado).")
-
-# Se não estiver usando banco de dados, usa JSON (modo legado)
-if not USE_DATABASE:
-    import json
-    USERS_FILE = "users.json"
+from app.database import (
+    init_database, user_exists as db_user_exists,
+    create_user_db, get_user_by_username, get_user_password_hash,
+    update_user_last_login, get_all_users_db, get_database_stats
+)
 
 # Chave secreta para hash (carregada do arquivo .env por segurança)
 # Esta chave é usada para "salgar" as senhas (torna mais seguro)
@@ -80,44 +70,6 @@ def verify_password(password, password_hash):
     return provided_hash == password_hash
 
 
-# Funções legadas para JSON (usadas apenas se USE_DATABASE = False)
-def load_users():
-    """
-    [LEGADO] Carrega a lista de usuários do arquivo JSON.
-    Usado apenas se o banco de dados não estiver disponível.
-    """
-    if USE_DATABASE:
-        return {}  # Não usado quando há banco de dados
-    
-    if not os.path.exists(USERS_FILE):
-        return {}
-    
-    try:
-        with open(USERS_FILE, 'r', encoding='utf-8') as f:
-            users = json.load(f)
-        return users
-    except (json.JSONDecodeError, IOError) as e:
-        print(f"Erro ao carregar usuários: {e}")
-        return {}
-
-
-def save_users(users):
-    """
-    [LEGADO] Salva a lista de usuários no arquivo JSON.
-    Usado apenas se o banco de dados não estiver disponível.
-    """
-    if USE_DATABASE:
-        return False  # Não usado quando há banco de dados
-    
-    try:
-        with open(USERS_FILE, 'w', encoding='utf-8') as f:
-            json.dump(users, f, indent=4, ensure_ascii=False)
-        return True
-    except IOError as e:
-        print(f"Erro ao salvar usuários: {e}")
-        return False
-
-
 def user_exists(username):
     """
     Verifica se um usuário já existe.
@@ -126,13 +78,7 @@ def user_exists(username):
     
     Retorna: True se o usuário existe, False caso contrário
     """
-    if USE_DATABASE:
-        # Usa banco de dados
-        return db_user_exists(username)
-    else:
-        # Modo legado: usa JSON
-        users = load_users()
-        return username.lower() in users
+    return db_user_exists(username)
 
 
 def create_user(username, password, email, cpf, data_nascimento, role='viewer'):
@@ -187,24 +133,9 @@ def create_user(username, password, email, cpf, data_nascimento, role='viewer'):
     if role not in valid_roles:
         role = 'viewer'  # Default para viewer se inválido
     
-    if USE_DATABASE:
-        # Usa banco de dados
-        success, message, user_id = create_user_db(username, password_hash, email, cpf, data_nascimento, created_at, role)
-        return success, message
-    else:
-        # Modo legado: usa JSON
-        users = load_users()
-        users[username] = {
-            'password_hash': password_hash,
-            'email': email,
-            'cpf': cpf,
-            'data_nascimento': data_nascimento,
-            'created_at': created_at
-        }
-        if save_users(users):
-            return True, "Usuário criado com sucesso!"
-        else:
-            return False, "Erro ao salvar usuário"
+    # Usa banco de dados
+    success, message, user_id = create_user_db(username, password_hash, email, cpf, data_nascimento, created_at, role)
+    return success, message
 
 
 def authenticate_user(username, password):
@@ -221,37 +152,19 @@ def authenticate_user(username, password):
     # Remove espaços do nome de usuário e converte para minúsculas
     username = username.strip().lower()
     
-    if USE_DATABASE:
-        # Usa banco de dados
-        # Busca o hash da senha no banco
-        stored_hash = get_user_password_hash(username)
-        
-        if stored_hash is None:
-            return False, "Usuário ou senha incorretos"
-        
-        # Verifica se a senha está correta
-        if verify_password(password, stored_hash):
-            # Atualiza o último login
-            update_user_last_login(username)
-            return True, "Login realizado com sucesso!"
-        else:
-            return False, "Usuário ou senha incorretos"
+    # Busca o hash da senha no banco
+    stored_hash = get_user_password_hash(username)
+    
+    if stored_hash is None:
+        return False, "Usuário ou senha incorretos"
+    
+    # Verifica se a senha está correta
+    if verify_password(password, stored_hash):
+        # Atualiza o último login
+        update_user_last_login(username)
+        return True, "Login realizado com sucesso!"
     else:
-        # Modo legado: usa JSON
-        users = load_users()
-        
-        # Verifica se o usuário existe
-        if username not in users:
-            return False, "Usuário ou senha incorretos"
-        
-        # Pega o hash da senha armazenado
-        stored_hash = users[username]['password_hash']
-        
-        # Verifica se a senha está correta
-        if verify_password(password, stored_hash):
-            return True, "Login realizado com sucesso!"
-        else:
-            return False, "Usuário ou senha incorretos"
+        return False, "Usuário ou senha incorretos"
 
 
 def login_required(f):
@@ -308,13 +221,7 @@ def get_all_users():
     
     Retorna: Lista de nomes de usuários
     """
-    if USE_DATABASE:
-        # Usa banco de dados
-        return get_all_users_db()
-    else:
-        # Modo legado: usa JSON
-        users = load_users()
-        return list(users.keys())
+    return get_all_users_db()
 
 
 # ============================================================================
@@ -372,22 +279,15 @@ def get_user_role(username):
     
     Retorna: Role do usuário ('admin', 'operator', 'viewer') ou 'viewer' por padrão
     """
-    if USE_DATABASE:
-        try:
-            from app.database import get_user_role as db_get_user_role
-            role = db_get_user_role(username)
-            # Se o role não existe ou é inválido, retorna 'viewer'
-            if not role or role not in ROLES:
-                # Se o role for 'user' (legado), converte para 'viewer'
-                if role == 'user':
-                    return 'viewer'
-                return 'viewer'
-            return role
-        except ImportError:
+    from app.database import get_user_role as db_get_user_role
+    role = db_get_user_role(username)
+    # Se o role não existe ou é inválido, retorna 'viewer'
+    if not role or role not in ROLES:
+        # Se o role for 'user' (legado), converte para 'viewer'
+        if role == 'user':
             return 'viewer'
-    else:
-        # Modo legado: usuários JSON têm role viewer por padrão
         return 'viewer'
+    return role
 
 
 def user_has_permission(username, permission):

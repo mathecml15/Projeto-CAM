@@ -1,67 +1,78 @@
-# Variáveis de ambiente (CONTÉM SENHAS - NUNCA SUBIR!)
-.env
-
-# Arquivos de usuários (contém senhas hasheadas)
-users.json
-
-# Arquivos de configuração (específicos de cada instalação)
-cameras_config.json
-system_config.json
-events_log.json
-
-# Banco de dados SQLite
-*.db
-*.sqlite
-*.sqlite3
-vms_database.db
-
-# Arquivos Python compilados
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Ambientes virtuais
+# Ambiente virtual
 venv/
 env/
 ENV/
+.venv
 
-# Arquivos de IDE
+# IDEs
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# Arquivos de sistema
-.DS_Store
-Thumbs.db
-
-# Pastas de gravações (pode conter vídeos grandes)
-gravacoes/
-*.webm
-*.mp4
-
-# Modelos YOLO (podem ser grandes)
-*.pt
-!yolov8n.pt  # Mantém o modelo nano por padrão
+# Arquivos de configuração sensíveis
+.env
+.env.local
+*.pem
+*.key
 
 # Logs
+logs/*.json
 *.log
+
+# Banco de dados
+*.db
+*.sqlite
+*.sqlite3
+
+# Vídeos e gravações
+gravacoes/*.webm
+gravacoes/*.mp4
+gravacoes/*.avi
+gravacoes/*.mov
+gravacoes/*_frames/
+
+# Modelos de IA (grandes)
+models/*.pt
+models/*.onnx
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
 
 # Arquivos temporários
 *.tmp
 *.temp
+*.bak
+*.backup
 
-# FFmpeg (opcional - remova esta linha se quiser commitar o ffmpeg no repositório)
-tools/ffmpeg/
-ffmpeg/
-*.tar.xz
+# Certificados SSL (desenvolvimento)
+config/cert.pem
+config/key.pem
 
-# Certificados SSL (NUNCA SUBIR - contém chaves privadas!)
-*.pem
-cert.pem
-key.pem
-*.crt
-*.key
-*.cert
+# Arquivos de usuários legados (migrado para MySQL)
+users.json

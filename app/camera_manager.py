@@ -12,8 +12,8 @@ import os
 from threading import Lock
 
 # Arquivo onde as câmeras serão salvas
-CAMERAS_CONFIG_FILE = 'cameras_config.json'
-SYSTEM_CONFIG_FILE = 'system_config.json'
+CAMERAS_CONFIG_FILE = 'config/cameras_config.json'
+SYSTEM_CONFIG_FILE = 'config/system_config.json'
 
 # Lock para operações de arquivo
 config_lock = Lock()

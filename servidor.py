@@ -60,8 +60,8 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 # Configuração HTTPS: True se usar SSL, False para desenvolvimento
 USE_HTTPS = os.getenv('USE_HTTPS', 'False').lower() == 'true'
-SSL_CERT_PATH = os.getenv('SSL_CERT_PATH', 'cert.pem')
-SSL_KEY_PATH = os.getenv('SSL_KEY_PATH', 'key.pem')
+SSL_CERT_PATH = os.getenv('SSL_CERT_PATH', 'config/cert.pem')
+SSL_KEY_PATH = os.getenv('SSL_KEY_PATH', 'config/key.pem')
 # Configuração de cookies de sessão
 # Para desenvolvimento com certificado auto-assinado, é CRÍTICO
 # permitir cookies mesmo com certificado não confiável
@@ -212,7 +212,7 @@ def main():
                 print(f"\n   💡 Soluções:")
                 print(f"   1. Instale OpenSSL:")
                 print(f"      Windows: Baixe de https://slproweb.com/products/Win32OpenSSL.html")
-                print(f"      Ou use: python gerar_certificado_ssl.py")
+                print(f"      Ou use: python scripts/gerar_certificado_ssl.py")
                 print(f"   2. Gere manualmente:")
                 print(f"      openssl req -x509 -newkey rsa:4096 -nodes -out {SSL_CERT_PATH} -keyout {SSL_KEY_PATH} -days 365")
                 print(f"   3. Desative HTTPS: USE_HTTPS=False no .env")
@@ -220,7 +220,7 @@ def main():
                 use_https = False
             except Exception as e:
                 print(f"   ❌ Erro ao gerar certificados: {e}")
-                print(f"\n   💡 Gere manualmente: python gerar_certificado_ssl.py")
+                print(f"\n   💡 Gere manualmente: python scripts/gerar_certificado_ssl.py")
                 print(f"   Ou desative HTTPS: USE_HTTPS=False no .env")
                 print(f"\n   Iniciando sem HTTPS...")
                 use_https = False

@@ -1,0 +1,7 @@
+{
+    "webcam": {
+        "source": 0,
+        "name": "Webcam",
+        "enabled": true
+    }
+}

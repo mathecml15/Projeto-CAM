@@ -70,11 +70,8 @@ AUTO_RECORD_ON_OBJECTS = None  # None ou lista de classes (ex: ['person'])
 # CONFIGURAÇÕES DE BANCO DE DADOS
 # ============================================================================
 
-# Tipo de banco de dados a usar
-# Opções: 'sqlite' (padrão, mais simples), 'postgresql', 'mysql'
-# SQLite não requer servidor separado e é ideal para desenvolvimento
-# PostgreSQL/MySQL são recomendados para produção
-DB_TYPE = 'sqlite'  # Padrão: SQLite
+# O banco de dados MySQL é configurado via variáveis de ambiente no arquivo .env
+# Configure: DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
 
 # ============================================================================
 # VARIÁVEL GLOBAL PARA ARMAZENAR CÂMERAS
