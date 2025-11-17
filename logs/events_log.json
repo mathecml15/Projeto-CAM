@@ -1,0 +1,1963 @@
+[
+  {
+    "id": 1763002801.022839,
+    "timestamp": "2025-11-13T00:00:01.022843",
+    "type": "recording_started",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação iniciada",
+    "details": {
+      "filename": "gravacoes/webcam-gravacao-13-11-2025_000001.webm",
+      "resolution": "640x480",
+      "fps": 20.0
+    },
+    "user": null
+  },
+  {
+    "id": 1763002801.024759,
+    "timestamp": "2025-11-13T00:00:01.024764",
+    "type": "user_action",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Usuário iniciou gravação manual",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763002804.555679,
+    "timestamp": "2025-11-13T00:00:04.555685",
+    "type": "recording_stopped",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação parada",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763002804.568194,
+    "timestamp": "2025-11-13T00:00:04.568198",
+    "type": "user_action",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Usuário parou gravação manual",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763002807.628325,
+    "timestamp": "2025-11-13T00:00:07.628335",
+    "type": "motion_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Movimento detectado - iniciando gravação automática",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763002807.650904,
+    "timestamp": "2025-11-13T00:00:07.650907",
+    "type": "recording_started",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação iniciada",
+    "details": {
+      "filename": "gravacoes/webcam-gravacao-13-11-2025_000007.webm",
+      "resolution": "640x480",
+      "fps": 20.0
+    },
+    "user": null
+  },
+  {
+    "id": 1763002811.859038,
+    "timestamp": "2025-11-13T00:00:11.859042",
+    "type": "recording_stopped",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação parada",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763002811.875732,
+    "timestamp": "2025-11-13T00:00:11.875737",
+    "type": "motion_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Movimento detectado - iniciando gravação automática",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763002811.899492,
+    "timestamp": "2025-11-13T00:00:11.899500",
+    "type": "recording_started",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação iniciada",
+    "details": {
+      "filename": "gravacoes/webcam-gravacao-13-11-2025_000011.webm",
+      "resolution": "640x480",
+      "fps": 20.0
+    },
+    "user": null
+  },
+  {
+    "id": 1763002873.763586,
+    "timestamp": "2025-11-13T00:01:13.763594",
+    "type": "recording_stopped",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação parada",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763002873.918779,
+    "timestamp": "2025-11-13T00:01:13.918786",
+    "type": "motion_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Movimento detectado - iniciando gravação automática",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763002873.947328,
+    "timestamp": "2025-11-13T00:01:13.947333",
+    "type": "recording_started",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação iniciada",
+    "details": {
+      "filename": "gravacoes/webcam-gravacao-13-11-2025_000113.webm",
+      "resolution": "640x480",
+      "fps": 20.0
+    },
+    "user": null
+  },
+  {
+    "id": 1763002880.785504,
+    "timestamp": "2025-11-13T00:01:20.785507",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): person",
+    "details": {
+      "objects": [
+        "person"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763002881.826311,
+    "timestamp": "2025-11-13T00:01:21.826314",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): tv",
+    "details": {
+      "objects": [
+        "tv"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763002882.334889,
+    "timestamp": "2025-11-13T00:01:22.334892",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): person",
+    "details": {
+      "objects": [
+        "person"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763002882.844587,
+    "timestamp": "2025-11-13T00:01:22.844589",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): person",
+    "details": {
+      "objects": [
+        "person"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763002883.357848,
+    "timestamp": "2025-11-13T00:01:23.357851",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): person",
+    "details": {
+      "objects": [
+        "person"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763002884.95933,
+    "timestamp": "2025-11-13T00:01:24.959333",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): person",
+    "details": {
+      "objects": [
+        "person"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763002886.604798,
+    "timestamp": "2025-11-13T00:01:26.604804",
+    "type": "recording_stopped",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação parada",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763002886.984213,
+    "timestamp": "2025-11-13T00:01:26.984216",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): person",
+    "details": {
+      "objects": [
+        "person"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763002958.413934,
+    "timestamp": "2025-11-13T00:02:38.413937",
+    "type": "user_logout",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez logout",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763002959.657594,
+    "timestamp": "2025-11-13T00:02:39.657597",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez login",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763005814.920298,
+    "timestamp": "2025-11-13T00:50:14.920301",
+    "type": "user_action",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Vídeo convertido: webcam-gravacao-13-11-2025_000113.webm -> webcam-gravacao-13-11-2025_000113.mp4",
+    "details": {
+      "format": "mp4",
+      "quality": "high"
+    },
+    "user": "matheus"
+  },
+  {
+    "id": 1763005995.53682,
+    "timestamp": "2025-11-13T00:53:15.536823",
+    "type": "user_logout",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez logout",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763005996.820533,
+    "timestamp": "2025-11-13T00:53:16.820537",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez login",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763006012.802273,
+    "timestamp": "2025-11-13T00:53:32.802277",
+    "type": "user_action",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Vídeo convertido: webcam-gravacao-13-11-2025_000113.webm -> webcam-gravacao-13-11-2025_000113.mp4",
+    "details": {
+      "format": "mp4",
+      "quality": "high"
+    },
+    "user": "matheus"
+  },
+  {
+    "id": 1763006321.247945,
+    "timestamp": "2025-11-13T00:58:41.247948",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): person",
+    "details": {
+      "objects": [
+        "person"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763006321.644533,
+    "timestamp": "2025-11-13T00:58:41.644537",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): person",
+    "details": {
+      "objects": [
+        "person"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763006322.19099,
+    "timestamp": "2025-11-13T00:58:42.190993",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): person",
+    "details": {
+      "objects": [
+        "person"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763006322.73109,
+    "timestamp": "2025-11-13T00:58:42.731093",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): person",
+    "details": {
+      "objects": [
+        "person"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763006323.257465,
+    "timestamp": "2025-11-13T00:58:43.257468",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): person",
+    "details": {
+      "objects": [
+        "person"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763006323.761322,
+    "timestamp": "2025-11-13T00:58:43.761325",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): person",
+    "details": {
+      "objects": [
+        "person"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763006324.28159,
+    "timestamp": "2025-11-13T00:58:44.281594",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): person",
+    "details": {
+      "objects": [
+        "person"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763006324.833341,
+    "timestamp": "2025-11-13T00:58:44.833346",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): person",
+    "details": {
+      "objects": [
+        "person"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763071893.239534,
+    "timestamp": "2025-11-13T19:11:33.239537",
+    "type": "user_logout",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez logout",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763071894.173978,
+    "timestamp": "2025-11-13T19:11:34.173981",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez login",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763071895.538226,
+    "timestamp": "2025-11-13T19:11:35.538230",
+    "type": "user_logout",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez logout",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763071941.215307,
+    "timestamp": "2025-11-13T19:12:21.215310",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'gafanhoto' fez login",
+    "details": {},
+    "user": "gafanhoto"
+  },
+  {
+    "id": 1763071950.831901,
+    "timestamp": "2025-11-13T19:12:30.831907",
+    "type": "motion_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Movimento detectado - iniciando gravação automática",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763071951.02894,
+    "timestamp": "2025-11-13T19:12:31.028943",
+    "type": "recording_started",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação iniciada",
+    "details": {
+      "filename": "gravacoes/webcam-gravacao-13-11-2025_191230.webm",
+      "resolution": "640x480",
+      "fps": 20.0
+    },
+    "user": null
+  },
+  {
+    "id": 1763071953.737051,
+    "timestamp": "2025-11-13T19:12:33.737056",
+    "type": "recording_stopped",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação parada",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763071955.12146,
+    "timestamp": "2025-11-13T19:12:35.121465",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): person",
+    "details": {
+      "objects": [
+        "person"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763071955.25906,
+    "timestamp": "2025-11-13T19:12:35.259062",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "2 objeto(s) detectado(s): person, suitcase",
+    "details": {
+      "objects": [
+        "person",
+        "suitcase"
+      ],
+      "count": 2
+    },
+    "user": null
+  },
+  {
+    "id": 1763071955.767234,
+    "timestamp": "2025-11-13T19:12:35.767238",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): person",
+    "details": {
+      "objects": [
+        "person"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763071956.292885,
+    "timestamp": "2025-11-13T19:12:36.292889",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "2 objeto(s) detectado(s): person, suitcase",
+    "details": {
+      "objects": [
+        "person",
+        "suitcase"
+      ],
+      "count": 2
+    },
+    "user": null
+  },
+  {
+    "id": 1763071956.822434,
+    "timestamp": "2025-11-13T19:12:36.822439",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "2 objeto(s) detectado(s): person, suitcase",
+    "details": {
+      "objects": [
+        "person",
+        "suitcase"
+      ],
+      "count": 2
+    },
+    "user": null
+  },
+  {
+    "id": 1763071957.332409,
+    "timestamp": "2025-11-13T19:12:37.332413",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): person",
+    "details": {
+      "objects": [
+        "person"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763071957.862361,
+    "timestamp": "2025-11-13T19:12:37.862365",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "2 objeto(s) detectado(s): person, suitcase",
+    "details": {
+      "objects": [
+        "person",
+        "suitcase"
+      ],
+      "count": 2
+    },
+    "user": null
+  },
+  {
+    "id": 1763071958.392039,
+    "timestamp": "2025-11-13T19:12:38.392042",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "2 objeto(s) detectado(s): person, suitcase",
+    "details": {
+      "objects": [
+        "person",
+        "suitcase"
+      ],
+      "count": 2
+    },
+    "user": null
+  },
+  {
+    "id": 1763071958.934048,
+    "timestamp": "2025-11-13T19:12:38.934052",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): person",
+    "details": {
+      "objects": [
+        "person"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763071959.461944,
+    "timestamp": "2025-11-13T19:12:39.461949",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "3 objeto(s) detectado(s): person, suitcase, book",
+    "details": {
+      "objects": [
+        "person",
+        "suitcase",
+        "book"
+      ],
+      "count": 3
+    },
+    "user": null
+  },
+  {
+    "id": 1763071959.99571,
+    "timestamp": "2025-11-13T19:12:39.995713",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "2 objeto(s) detectado(s): person, suitcase",
+    "details": {
+      "objects": [
+        "person",
+        "suitcase"
+      ],
+      "count": 2
+    },
+    "user": null
+  },
+  {
+    "id": 1763071960.537048,
+    "timestamp": "2025-11-13T19:12:40.537051",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "3 objeto(s) detectado(s): person, suitcase, bed",
+    "details": {
+      "objects": [
+        "person",
+        "suitcase",
+        "bed"
+      ],
+      "count": 3
+    },
+    "user": null
+  },
+  {
+    "id": 1763071961.062345,
+    "timestamp": "2025-11-13T19:12:41.062348",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "2 objeto(s) detectado(s): person, book",
+    "details": {
+      "objects": [
+        "person",
+        "book"
+      ],
+      "count": 2
+    },
+    "user": null
+  },
+  {
+    "id": 1763071961.593336,
+    "timestamp": "2025-11-13T19:12:41.593342",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "2 objeto(s) detectado(s): person, suitcase",
+    "details": {
+      "objects": [
+        "person",
+        "suitcase"
+      ],
+      "count": 2
+    },
+    "user": null
+  },
+  {
+    "id": 1763071962.137212,
+    "timestamp": "2025-11-13T19:12:42.137215",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "2 objeto(s) detectado(s): person, suitcase",
+    "details": {
+      "objects": [
+        "person",
+        "suitcase"
+      ],
+      "count": 2
+    },
+    "user": null
+  },
+  {
+    "id": 1763071962.661756,
+    "timestamp": "2025-11-13T19:12:42.661759",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "2 objeto(s) detectado(s): person, suitcase",
+    "details": {
+      "objects": [
+        "person",
+        "suitcase"
+      ],
+      "count": 2
+    },
+    "user": null
+  },
+  {
+    "id": 1763071963.209375,
+    "timestamp": "2025-11-13T19:12:43.209378",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "3 objeto(s) detectado(s): person, suitcase, bed",
+    "details": {
+      "objects": [
+        "person",
+        "suitcase",
+        "bed"
+      ],
+      "count": 3
+    },
+    "user": null
+  },
+  {
+    "id": 1763071963.735905,
+    "timestamp": "2025-11-13T19:12:43.735908",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "2 objeto(s) detectado(s): person, suitcase",
+    "details": {
+      "objects": [
+        "person",
+        "suitcase"
+      ],
+      "count": 2
+    },
+    "user": null
+  },
+  {
+    "id": 1763071964.262729,
+    "timestamp": "2025-11-13T19:12:44.262732",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "2 objeto(s) detectado(s): person, suitcase",
+    "details": {
+      "objects": [
+        "person",
+        "suitcase"
+      ],
+      "count": 2
+    },
+    "user": null
+  },
+  {
+    "id": 1763071965.238242,
+    "timestamp": "2025-11-13T19:12:45.238247",
+    "type": "recording_started",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação iniciada",
+    "details": {
+      "filename": "gravacoes/webcam-gravacao-13-11-2025_191245.webm",
+      "resolution": "640x480",
+      "fps": 20.0
+    },
+    "user": null
+  },
+  {
+    "id": 1763071965.253542,
+    "timestamp": "2025-11-13T19:12:45.253548",
+    "type": "user_action",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Usuário iniciou gravação manual",
+    "details": {},
+    "user": "gafanhoto"
+  },
+  {
+    "id": 1763071969.310535,
+    "timestamp": "2025-11-13T19:12:49.310543",
+    "type": "recording_stopped",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação parada",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763071969.325583,
+    "timestamp": "2025-11-13T19:12:49.325590",
+    "type": "user_action",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Usuário parou gravação manual",
+    "details": {},
+    "user": "gafanhoto"
+  },
+  {
+    "id": 1763074809.132764,
+    "timestamp": "2025-11-13T20:00:09.132768",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez login",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763074812.087846,
+    "timestamp": "2025-11-13T20:00:12.087866",
+    "type": "motion_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Movimento detectado - iniciando gravação automática",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763074812.2241,
+    "timestamp": "2025-11-13T20:00:12.224108",
+    "type": "recording_started",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação iniciada",
+    "details": {
+      "filename": "gravacoes/webcam-gravacao-13-11-2025_200012.webm",
+      "resolution": "640x480",
+      "fps": 20.0
+    },
+    "user": null
+  },
+  {
+    "id": 1763074817.916217,
+    "timestamp": "2025-11-13T20:00:17.916221",
+    "type": "recording_stopped",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação parada",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763074817.935638,
+    "timestamp": "2025-11-13T20:00:17.935645",
+    "type": "motion_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Movimento detectado - iniciando gravação automática",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763074817.972007,
+    "timestamp": "2025-11-13T20:00:17.972012",
+    "type": "recording_started",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação iniciada",
+    "details": {
+      "filename": "gravacoes/webcam-gravacao-13-11-2025_200017.webm",
+      "resolution": "640x480",
+      "fps": 20.0
+    },
+    "user": null
+  },
+  {
+    "id": 1763074819.265323,
+    "timestamp": "2025-11-13T20:00:19.265326",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): person",
+    "details": {
+      "objects": [
+        "person"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763074819.448836,
+    "timestamp": "2025-11-13T20:00:19.448840",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "2 objeto(s) detectado(s): person, suitcase",
+    "details": {
+      "objects": [
+        "person",
+        "suitcase"
+      ],
+      "count": 2
+    },
+    "user": null
+  },
+  {
+    "id": 1763074819.942715,
+    "timestamp": "2025-11-13T20:00:19.942718",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "2 objeto(s) detectado(s): person, suitcase",
+    "details": {
+      "objects": [
+        "person",
+        "suitcase"
+      ],
+      "count": 2
+    },
+    "user": null
+  },
+  {
+    "id": 1763074820.488883,
+    "timestamp": "2025-11-13T20:00:20.488887",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): person",
+    "details": {
+      "objects": [
+        "person"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763074821.054082,
+    "timestamp": "2025-11-13T20:00:21.054085",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): person",
+    "details": {
+      "objects": [
+        "person"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763074821.583399,
+    "timestamp": "2025-11-13T20:00:21.583402",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): person",
+    "details": {
+      "objects": [
+        "person"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763074822.138725,
+    "timestamp": "2025-11-13T20:00:22.138728",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): person",
+    "details": {
+      "objects": [
+        "person"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763074822.646338,
+    "timestamp": "2025-11-13T20:00:22.646342",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "2 objeto(s) detectado(s): person, suitcase",
+    "details": {
+      "objects": [
+        "person",
+        "suitcase"
+      ],
+      "count": 2
+    },
+    "user": null
+  },
+  {
+    "id": 1763074822.973986,
+    "timestamp": "2025-11-13T20:00:22.973990",
+    "type": "recording_stopped",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação parada",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763074823.017829,
+    "timestamp": "2025-11-13T20:00:23.017833",
+    "type": "motion_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Movimento detectado - iniciando gravação automática",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763074823.040614,
+    "timestamp": "2025-11-13T20:00:23.040620",
+    "type": "recording_started",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação iniciada",
+    "details": {
+      "filename": "gravacoes/webcam-gravacao-13-11-2025_200023.webm",
+      "resolution": "640x480",
+      "fps": 20.0
+    },
+    "user": null
+  },
+  {
+    "id": 1763074823.175292,
+    "timestamp": "2025-11-13T20:00:23.175294",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): person",
+    "details": {
+      "objects": [
+        "person"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763074823.69027,
+    "timestamp": "2025-11-13T20:00:23.690274",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): suitcase",
+    "details": {
+      "objects": [
+        "suitcase"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763074824.237479,
+    "timestamp": "2025-11-13T20:00:24.237483",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "2 objeto(s) detectado(s): person, suitcase",
+    "details": {
+      "objects": [
+        "person",
+        "suitcase"
+      ],
+      "count": 2
+    },
+    "user": null
+  },
+  {
+    "id": 1763074824.783403,
+    "timestamp": "2025-11-13T20:00:24.783406",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "1 objeto(s) detectado(s): suitcase",
+    "details": {
+      "objects": [
+        "suitcase"
+      ],
+      "count": 1
+    },
+    "user": null
+  },
+  {
+    "id": 1763074825.788382,
+    "timestamp": "2025-11-13T20:00:25.788389",
+    "type": "recording_stopped",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação parada",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763074826.635227,
+    "timestamp": "2025-11-13T20:00:26.635232",
+    "type": "recording_started",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação iniciada",
+    "details": {
+      "filename": "gravacoes/webcam-gravacao-13-11-2025_200026.webm",
+      "resolution": "640x480",
+      "fps": 20.0
+    },
+    "user": null
+  },
+  {
+    "id": 1763074826.651673,
+    "timestamp": "2025-11-13T20:00:26.651677",
+    "type": "user_action",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Usuário iniciou gravação manual",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763074830.872625,
+    "timestamp": "2025-11-13T20:00:30.872629",
+    "type": "recording_stopped",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação parada",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763074830.886332,
+    "timestamp": "2025-11-13T20:00:30.886337",
+    "type": "user_action",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Usuário parou gravação manual",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763074833.297647,
+    "timestamp": "2025-11-13T20:00:33.297650",
+    "type": "recording_started",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação iniciada",
+    "details": {
+      "filename": "gravacoes/webcam-gravacao-13-11-2025_200033.webm",
+      "resolution": "640x480",
+      "fps": 20.0
+    },
+    "user": null
+  },
+  {
+    "id": 1763074833.311832,
+    "timestamp": "2025-11-13T20:00:33.311837",
+    "type": "user_action",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Usuário iniciou gravação manual",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763074835.119671,
+    "timestamp": "2025-11-13T20:00:35.119677",
+    "type": "recording_stopped",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação parada",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763074835.137144,
+    "timestamp": "2025-11-13T20:00:35.137149",
+    "type": "user_action",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Usuário parou gravação manual",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763085116.519837,
+    "timestamp": "2025-11-13T22:51:56.519841",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez login",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763085119.428548,
+    "timestamp": "2025-11-13T22:51:59.428551",
+    "type": "user_logout",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez logout",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763085161.838566,
+    "timestamp": "2025-11-13T22:52:41.838570",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'grilo' fez login",
+    "details": {},
+    "user": "grilo"
+  },
+  {
+    "id": 1763085221.089661,
+    "timestamp": "2025-11-13T22:53:41.089665",
+    "type": "motion_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Movimento detectado - iniciando gravação automática",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763085221.119788,
+    "timestamp": "2025-11-13T22:53:41.119793",
+    "type": "recording_started",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação iniciada",
+    "details": {
+      "filename": "gravacoes/webcam-gravacao-13-11-2025_225341.webm",
+      "resolution": "640x480",
+      "fps": 20.0
+    },
+    "user": null
+  },
+  {
+    "id": 1763085242.741965,
+    "timestamp": "2025-11-13T22:54:02.741970",
+    "type": "recording_stopped",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação parada",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763085254.86663,
+    "timestamp": "2025-11-13T22:54:14.866634",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "3 objeto(s) detectado(s): person, bed, suitcase",
+    "details": {
+      "objects": [
+        "person",
+        "bed",
+        "suitcase"
+      ],
+      "count": 3
+    },
+    "user": null
+  },
+  {
+    "id": 1763085255.261672,
+    "timestamp": "2025-11-13T22:54:15.261675",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "2 objeto(s) detectado(s): person, bed",
+    "details": {
+      "objects": [
+        "person",
+        "bed"
+      ],
+      "count": 2
+    },
+    "user": null
+  },
+  {
+    "id": 1763085255.818632,
+    "timestamp": "2025-11-13T22:54:15.818636",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "3 objeto(s) detectado(s): person, bed, suitcase",
+    "details": {
+      "objects": [
+        "person",
+        "bed",
+        "suitcase"
+      ],
+      "count": 3
+    },
+    "user": null
+  },
+  {
+    "id": 1763085256.35327,
+    "timestamp": "2025-11-13T22:54:16.353273",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "2 objeto(s) detectado(s): person, bed",
+    "details": {
+      "objects": [
+        "person",
+        "bed"
+      ],
+      "count": 2
+    },
+    "user": null
+  },
+  {
+    "id": 1763085256.860161,
+    "timestamp": "2025-11-13T22:54:16.860165",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "2 objeto(s) detectado(s): person, bed",
+    "details": {
+      "objects": [
+        "person",
+        "bed"
+      ],
+      "count": 2
+    },
+    "user": null
+  },
+  {
+    "id": 1763085257.418181,
+    "timestamp": "2025-11-13T22:54:17.418184",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "2 objeto(s) detectado(s): person, bed",
+    "details": {
+      "objects": [
+        "person",
+        "bed"
+      ],
+      "count": 2
+    },
+    "user": null
+  },
+  {
+    "id": 1763085625.810867,
+    "timestamp": "2025-11-13T23:00:25.810870",
+    "type": "user_logout",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'grilo' fez logout",
+    "details": {},
+    "user": "grilo"
+  },
+  {
+    "id": 1763085628.246186,
+    "timestamp": "2025-11-13T23:00:28.246190",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez login",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763085917.415575,
+    "timestamp": "2025-11-13T23:05:17.415578",
+    "type": "user_logout",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez logout",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763085920.30035,
+    "timestamp": "2025-11-13T23:05:20.300353",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez login",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763085923.964783,
+    "timestamp": "2025-11-13T23:05:23.964786",
+    "type": "user_logout",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez logout",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763085927.323631,
+    "timestamp": "2025-11-13T23:05:27.323635",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez login",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763085977.913431,
+    "timestamp": "2025-11-13T23:06:17.913434",
+    "type": "user_logout",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez logout",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763085980.359558,
+    "timestamp": "2025-11-13T23:06:20.359565",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez login",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763085984.038842,
+    "timestamp": "2025-11-13T23:06:24.038847",
+    "type": "user_logout",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez logout",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763085989.368291,
+    "timestamp": "2025-11-13T23:06:29.368295",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez login",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763085995.458235,
+    "timestamp": "2025-11-13T23:06:35.458239",
+    "type": "user_logout",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez logout",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763086037.950425,
+    "timestamp": "2025-11-13T23:07:17.950429",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez login",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763086041.004677,
+    "timestamp": "2025-11-13T23:07:21.004679",
+    "type": "user_logout",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez logout",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763086042.964342,
+    "timestamp": "2025-11-13T23:07:22.964345",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez login",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763086045.852512,
+    "timestamp": "2025-11-13T23:07:25.852515",
+    "type": "user_logout",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez logout",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763086156.942926,
+    "timestamp": "2025-11-13T23:09:16.942930",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez login",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763086162.399064,
+    "timestamp": "2025-11-13T23:09:22.399067",
+    "type": "user_logout",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez logout",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763086165.588279,
+    "timestamp": "2025-11-13T23:09:25.588283",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez login",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763086169.882314,
+    "timestamp": "2025-11-13T23:09:29.882316",
+    "type": "user_logout",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez logout",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763086395.907523,
+    "timestamp": "2025-11-13T23:13:15.907527",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez login",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763086400.933911,
+    "timestamp": "2025-11-13T23:13:20.933915",
+    "type": "user_logout",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez logout",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763086406.319986,
+    "timestamp": "2025-11-13T23:13:26.319990",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'grilo' fez login",
+    "details": {},
+    "user": "grilo"
+  },
+  {
+    "id": 1763086409.83696,
+    "timestamp": "2025-11-13T23:13:29.836962",
+    "type": "user_logout",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'grilo' fez logout",
+    "details": {},
+    "user": "grilo"
+  },
+  {
+    "id": 1763086427.490224,
+    "timestamp": "2025-11-13T23:13:47.490228",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'gafanhoto' fez login",
+    "details": {},
+    "user": "gafanhoto"
+  },
+  {
+    "id": 1763086441.884233,
+    "timestamp": "2025-11-13T23:14:01.884235",
+    "type": "user_logout",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'gafanhoto' fez logout",
+    "details": {},
+    "user": "gafanhoto"
+  },
+  {
+    "id": 1763086444.165283,
+    "timestamp": "2025-11-13T23:14:04.165287",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez login",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763087217.41621,
+    "timestamp": "2025-11-13T23:26:57.416213",
+    "type": "user_logout",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez logout",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763087223.88254,
+    "timestamp": "2025-11-13T23:27:03.882545",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'gafanhoto' fez login",
+    "details": {},
+    "user": "gafanhoto"
+  },
+  {
+    "id": 1763087233.823941,
+    "timestamp": "2025-11-13T23:27:13.823944",
+    "type": "user_logout",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'gafanhoto' fez logout",
+    "details": {},
+    "user": "gafanhoto"
+  },
+  {
+    "id": 1763087241.150366,
+    "timestamp": "2025-11-13T23:27:21.150370",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez login",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763087248.602806,
+    "timestamp": "2025-11-13T23:27:28.602808",
+    "type": "user_logout",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez logout",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763087325.419747,
+    "timestamp": "2025-11-13T23:28:45.419751",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez login",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763087329.265779,
+    "timestamp": "2025-11-13T23:28:49.265784",
+    "type": "motion_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Movimento detectado - iniciando gravação automática",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763087329.294005,
+    "timestamp": "2025-11-13T23:28:49.294009",
+    "type": "recording_started",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação iniciada",
+    "details": {
+      "filename": "gravacoes/webcam-gravacao-13-11-2025_232849.webm",
+      "resolution": "640x480",
+      "fps": 20.0
+    },
+    "user": null
+  },
+  {
+    "id": 1763087332.035502,
+    "timestamp": "2025-11-13T23:28:52.035508",
+    "type": "recording_stopped",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação parada",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763087337.179829,
+    "timestamp": "2025-11-13T23:28:57.179832",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "3 objeto(s) detectado(s): person, suitcase, bed",
+    "details": {
+      "objects": [
+        "person",
+        "suitcase",
+        "bed"
+      ],
+      "count": 3
+    },
+    "user": null
+  },
+  {
+    "id": 1763087337.605901,
+    "timestamp": "2025-11-13T23:28:57.605906",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "3 objeto(s) detectado(s): person, bed, suitcase",
+    "details": {
+      "objects": [
+        "person",
+        "bed",
+        "suitcase"
+      ],
+      "count": 3
+    },
+    "user": null
+  },
+  {
+    "id": 1763087338.132743,
+    "timestamp": "2025-11-13T23:28:58.132747",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "3 objeto(s) detectado(s): person, bed, suitcase",
+    "details": {
+      "objects": [
+        "person",
+        "bed",
+        "suitcase"
+      ],
+      "count": 3
+    },
+    "user": null
+  },
+  {
+    "id": 1763087338.661318,
+    "timestamp": "2025-11-13T23:28:58.661321",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "3 objeto(s) detectado(s): suitcase, bed, person",
+    "details": {
+      "objects": [
+        "suitcase",
+        "bed",
+        "person"
+      ],
+      "count": 3
+    },
+    "user": null
+  },
+  {
+    "id": 1763087339.204728,
+    "timestamp": "2025-11-13T23:28:59.204732",
+    "type": "object_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "3 objeto(s) detectado(s): person, bed, suitcase",
+    "details": {
+      "objects": [
+        "person",
+        "bed",
+        "suitcase"
+      ],
+      "count": 3
+    },
+    "user": null
+  },
+  {
+    "id": 1763087340.364906,
+    "timestamp": "2025-11-13T23:29:00.364912",
+    "type": "recording_started",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação iniciada",
+    "details": {
+      "filename": "gravacoes/webcam-gravacao-13-11-2025_232900.webm",
+      "resolution": "640x480",
+      "fps": 20.0
+    },
+    "user": null
+  },
+  {
+    "id": 1763087340.380133,
+    "timestamp": "2025-11-13T23:29:00.380139",
+    "type": "user_action",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Usuário iniciou gravação manual",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763087351.739132,
+    "timestamp": "2025-11-13T23:29:11.739136",
+    "type": "recording_stopped",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação parada",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763087351.75678,
+    "timestamp": "2025-11-13T23:29:11.756786",
+    "type": "user_action",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Usuário parou gravação manual",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763087378.178159,
+    "timestamp": "2025-11-13T23:29:38.178163",
+    "type": "user_logout",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez logout",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763089270.810038,
+    "timestamp": "2025-11-14T00:01:10.810042",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez login",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763090417.363107,
+    "timestamp": "2025-11-14T00:20:17.363112",
+    "type": "motion_detected",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Movimento detectado - iniciando gravação automática",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763090417.37705,
+    "timestamp": "2025-11-14T00:20:17.377054",
+    "type": "recording_started",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação iniciada",
+    "details": {
+      "filename": "gravacoes/webcam-gravacao-14-11-2025_002017.webm",
+      "resolution": "640x480",
+      "fps": 20.0
+    },
+    "user": null
+  },
+  {
+    "id": 1763090426.691338,
+    "timestamp": "2025-11-14T00:20:26.691343",
+    "type": "recording_stopped",
+    "severity": "info",
+    "camera_id": "webcam",
+    "message": "Gravação parada",
+    "details": {},
+    "user": null
+  },
+  {
+    "id": 1763154026.90143,
+    "timestamp": "2025-11-14T18:00:26.901433",
+    "type": "user_logout",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez logout",
+    "details": {},
+    "user": "matheus"
+  },
+  {
+    "id": 1763154029.887076,
+    "timestamp": "2025-11-14T18:00:29.887080",
+    "type": "user_login",
+    "severity": "info",
+    "camera_id": null,
+    "message": "Usuário 'matheus' fez login",
+    "details": {},
+    "user": "matheus"
+  }
+]
